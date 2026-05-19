@@ -1,1 +1,4 @@
 /.venv
+
+# Ignore the working STK input file (canonical file replaced locally)
+STK_input/Satellite1_Results.csv
