@@ -203,7 +203,7 @@ python STK_output_energy_angular_momentum_errors.py /absolute/path/to/Satellite1
 
 ### `src/constants.py`
 
-Defines immutable physical/constants values via `Constants` dataclass and `constants()` factory:
+Defines immutable physical and mathematical constants via the `Constants` dataclass and `constants()` factory:
 
 - Earth gravitational parameter `mu_earth`
 - Earth radii variants
