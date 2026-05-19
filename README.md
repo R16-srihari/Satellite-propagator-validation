@@ -78,7 +78,7 @@ Main packages:
 3. Integrates trajectory over 24 hours
 4. Exports Cartesian states, orbital elements, and conservation metrics to CSV
 5. Runs validation routines (energy, angular momentum, analytical comparison)
-6. Produces conservation plots
+6. Produces conservation plots using analytical-state baselines for error visualization
 7. Mirrors terminal logs to `output/terminal_log.txt`
 
 ### 4.2 Python Run CLI Modes (`leo_simulator.py`)
@@ -275,8 +275,9 @@ Creates simulation result artifacts:
 
 Computes and reports conservation performance:
 
-- specific orbital energy drift
-- specific angular momentum drift
+- specific orbital energy drift (computed relative to the initial numerical state)
+- specific angular momentum drift (computed relative to the initial numerical state)
+- prints analytical expected specific energy from orbit parameters for comparison
 - pass/fail-like status based on relative error thresholds
 - outputs:
   - `energy_conservation.csv`
@@ -298,6 +299,9 @@ Generates visualization diagnostics:
 
 - energy vs time + zoomed error panel
 - angular momentum vs time + zoomed error panel
+- error panels use analytical-state references from orbit parameters:
+  - `ΔE = E_numerical - E_analytical`, where `E_analytical = orbit_params.energy`
+  - `Δ|h| = |h|_numerical - |h|_analytical`, where `|h|_analytical = orbit_params.h_mag`
 - outputs:
   - `energy_vs_time.png`
   - `angular_momentum_vs_time.png`
