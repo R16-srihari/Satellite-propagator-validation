@@ -42,9 +42,9 @@ Integration in progress...
 
 
 === INTEGRATION COMPLETE ===
-Solver steps:           8640
+Solver steps:           8647
 Rejected steps:         0
-Function evaluations:   21788
+Function evaluations:   103765
 Output points:          8641
 ===========================
 
@@ -68,9 +68,9 @@ Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technolog
 === EXPORT SUMMARY ===
 Total points exported: 8641
 Time span: 24.00 hours (15.39 orbits)
-Energy variation (%): min=-1.28e-12, max=1.14e-12, mean=5.55e-13
-Angular momentum variation (%): 1.20e-12
-Semi-major axis variation (m): 1.65e-07
+Energy variation (%): min=-7.66e-13, max=3.83e-13, mean=2.87e-13
+Angular momentum variation (%): 5.70e-13
+Semi-major axis variation (m): 7.82e-08
 ======================
 
 === VALIDATION ===
@@ -78,25 +78,25 @@ Semi-major axis variation (m): 1.65e-07
 Energy Conservation Test:
   Initial energy:                 -2.918808174176939e+07 J/kg
   Expected energy (analytical):   -2.918808174176939e+07 J/kg
-  Max absolute energy error:      3.725290e-07 J/kg
-  Max relative energy error:      1.276305e-14 (1.28e-12 %)
-  Mean relative energy error:     5.545865e-15 (5.55e-13 %)
+  Max absolute energy error:      2.235174e-07 J/kg
+  Max relative energy error:      7.657832e-15 (7.66e-13 %)
+  Mean relative energy error:     2.869789e-15 (2.87e-13 %)
   Status: EXCELLENT - Energy conserved to < 1e-9 relative error
   Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\leo_sat_simulator\output\energy_conservation.csv
 
   Angular momentum (specific) conservation:
   Initial |h|:                   5.216989960572021e+10 m^2/s
-  Max absolute |h| error:        3.280640e-04 m^2/s
-  Max relative |h| error:        6.288376e-15 (6.29e-13 %)
-  Mean relative |h| error:       2.739964e-15 (2.74e-13 %)
+  Max absolute |h| error:        1.983643e-04 m^2/s
+  Max relative |h| error:        3.802274e-15 (3.80e-13 %)
+  Mean relative |h| error:       1.414162e-15 (1.41e-13 %)
   Status: EXCELLENT - Angular momentum conserved to < 1e-9 relative error
   Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\leo_sat_simulator\output\angular_momentum_conservation.csv
 
 Analytical Comparison Test:
   Computing analytical solution...
-  Max position error:             2.939097e-06 m (4.304391e-13 rel)
-  Mean position error:            9.582441e-07 m (1.403376e-13 rel)
-  RMS position error:             1.322529e-06 m
+  Max position error:             2.198454e-06 m (3.219699e-13 rel)
+  Mean position error:            6.026549e-07 m (8.826052e-14 rel)
+  RMS position error:             8.917855e-07 m
   Status: EXCELLENT - Position error < 1 meter
 
   Orbital Period Verification:
