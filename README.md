@@ -27,7 +27,7 @@ RK-7-8-integrator-validation/
 ├── README.md
 ├── STK_input/
 │   ├── Satellite1.opm
-│   └── Satellite1_Results.csv (canonical file distributed as release asset)
+│   └── Satellite1_Results.csv (canonical file distributed as release asset; see section 8)
 ├── src/
 │   ├── constants.py
 │   ├── orbital_parameters.py
@@ -130,7 +130,7 @@ This script reads an STK results CSV (default: `STK_input/Satellite1_Results.csv
 
 Then it computes specific orbital energy:
 
-- `epsilon = -mu / (2a)`
+- `epsilon = -mu / (2a)`, where `mu` is Earth's gravitational parameter
 
 and generates:
 
