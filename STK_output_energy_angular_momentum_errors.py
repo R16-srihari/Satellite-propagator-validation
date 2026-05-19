@@ -303,7 +303,7 @@ def main():
             e0 = float(opm["e"])  # unitless
             gm = float(opm.get("gm", MU_EARTH))
             # specific angular momentum magnitude for Keplerian orbit: h = sqrt(mu * a * (1 - e^2))
-            reference_h = float(np.sqrt(gm * a0 * (1.0 - e0 * e0)))
+            reference_h = float(np.sqrt(gm * a0 * (1.0 - e0**2)))
             reference_e = -float(gm / (2.0 * a0))
     except Exception as exc:  # keep running even if OPM parse fails
         print(f"Warning: failed to parse OPM {args.opm}: {exc}")
@@ -322,7 +322,7 @@ def main():
         times, angular_momentum, args.output_h, reference_h=reference_h
     )
     fig_e, ax_e, e_ref = plot_energy_error(times, energy, args.output_e, reference_e=reference_e)
-    
+
     save_energies_to_csv(times, angular_momentum, energy, args.output_csv)
 
     print(f"Loaded {len(times)} samples from {args.csv_path}")
