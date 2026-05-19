@@ -4,20 +4,34 @@ set -euo pipefail
 OWNER=${OWNER:-R16-srihari}
 REPO=${REPO:-RK-7-8-integrator-validation}
 TAG=${TAG:-stk-latest}
-FILE=STK_input/Satellite1_Results.csv
+FILES=(STK_input/Satellite1_Results.csv STK_input/Satellite1.opm)
 
-if [[ ! -f "$FILE" ]]; then
-  echo "File not found: $FILE" >&2
+# Require at least one existing file
+found_any=0
+for f in "${FILES[@]}"; do
+  if [[ -f "$f" ]]; then
+    found_any=1
+  fi
+done
+if [[ $found_any -eq 0 ]]; then
+  echo "No release asset files found: ${FILES[*]}" >&2
   exit 1
 fi
 
-# Try to get existing asset id and delete it if present
-asset_id=$(gh api repos/$OWNER/$REPO/releases/tags/$TAG --jq ".assets[] | select(.name==\"$(basename $FILE)\") | .id" 2>/dev/null || true)
-if [[ -n "$asset_id" ]]; then
-  echo "Deleting existing asset id $asset_id"
-  gh api repos/$OWNER/$REPO/releases/assets/$asset_id -X DELETE
-fi
+for FILE in "${FILES[@]}"; do
+  if [[ ! -f "$FILE" ]]; then
+    echo "Skipping missing file: $FILE"
+    continue
+  fi
 
-echo "Uploading $FILE to release $TAG in $OWNER/$REPO"
-gh release upload $TAG $FILE --repo $OWNER/$REPO --clobber
-echo "Upload complete"
+  # Try to get existing asset id and delete it if present
+  asset_id=$(gh api repos/$OWNER/$REPO/releases/tags/$TAG --jq ".assets[] | select(.name==\"$(basename $FILE)\") | .id" 2>/dev/null || true)
+  if [[ -n "$asset_id" ]]; then
+    echo "Deleting existing asset id $asset_id for $(basename $FILE)"
+    gh api repos/$OWNER/$REPO/releases/assets/$asset_id -X DELETE
+  fi
+
+  echo "Uploading $FILE to release $TAG in $OWNER/$REPO"
+  gh release upload $TAG $FILE --repo $OWNER/$REPO --clobber
+  echo "Upload complete for $FILE"
+done

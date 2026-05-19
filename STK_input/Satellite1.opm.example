@@ -1,0 +1,13 @@
+# Example Satellite1.opm (template for STK release asset)
+# Replace or drop this file with an actual Satellite1.opm (ignored by git)
+
+CCSDS_OPM_VERS        = 3.0
+
+OBJECT_NAME           = Satellite1
+EPOCH                 = 2026-05-18T06:30:00.000000
+SEMI_MAJOR_AXIS       = 6828.137000
+ECCENTRICITY          = 0.0
+INCLINATION           = 51.600000000
+RA_OF_ASC_NODE        = 0.0
+ARG_OF_PERICENTER     = 0.0
+TRUE_ANOMALY          = 0.0

@@ -1,4 +1,9 @@
 /.venv
 
+# Python cache directories
+**/__pycache__/
+**/_pycache__/
+
 # Ignore the working STK input file (canonical file replaced locally)
 STK_input/Satellite1_Results.csv
+STK_input/Satellite1.opm

@@ -69,6 +69,8 @@ def _run_simulation_core(output_dir: Path, log_file: Path) -> None:
     print(f"Velocity [m/s]:     [{v_init[0]:.6e}, {v_init[1]:.6e}, {v_init[2]:.6e}]")
     print(f"Initial radius:     {np.linalg.norm(r_init):.6e} m")
     print(f"Initial velocity:   {np.linalg.norm(v_init):.6e} m/s")
+    if getattr(orbit, "epoch", None) is not None:
+        print(f"Epoch (UTC):         {orbit.epoch.isoformat(sep=' ')}")
     print("==========================\n")
 
     print("=== INTEGRATION SETUP ===")
