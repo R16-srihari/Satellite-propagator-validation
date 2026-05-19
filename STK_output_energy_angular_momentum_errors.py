@@ -10,10 +10,13 @@ from __future__ import annotations
 import argparse
 import csv
 from pathlib import Path
+from typing import Sequence
 
 import matplotlib
-matplotlib.use("Agg")  # Use non-interactive backend
-import matplotlib.pyplot as plt
+# Backend selection and pyplot import are deferred until `main()` to avoid
+# parsing CLI args or changing matplotlib state at import time. Plotting
+# functions import `matplotlib.pyplot` lazily so importing this module is
+# side-effect free.
 import numpy as np
 
 
@@ -23,7 +26,7 @@ MU_EARTH = 398600.4418  # km^3 / s^2
 OUTPUT_DIR = Path(__file__).resolve().parent / "output"
 
 
-def load_time_series(csv_path: Path):
+def load_time_series(csv_path: Path) -> tuple[list[str], np.ndarray, np.ndarray]:
     """Load the time, Delaunay G, and semi-major axis series from the CSV.
     
     Stops reading when encountering a row with "Statistics" in the first column.
@@ -70,7 +73,9 @@ def compute_energy(semi_major_axis: np.ndarray, mu: float = MU_EARTH) -> np.ndar
     return -mu / (2.0 * semi_major_axis)
 
 
-def save_energies_to_csv(times, angular_momentum, energy, csv_path: Path):
+def save_energies_to_csv(
+    times: Sequence[str], angular_momentum: np.ndarray, energy: np.ndarray, csv_path: Path
+) -> None:
     """Write the time, angular momentum, and orbital energy to a CSV file."""
 
     # Make sure destination directory exists
@@ -82,8 +87,13 @@ def save_energies_to_csv(times, angular_momentum, energy, csv_path: Path):
             writer.writerow([time, f"{h:.12f}", f"{e:.12f}"])
 
 
-def plot_angular_momentum_error(times, angular_momentum, output_path: Path | None = None):
+def plot_angular_momentum_error(
+    times: Sequence[str],
+    angular_momentum: np.ndarray,
+    output_path: Path | None = None,
+) -> tuple[matplotlib.figure.Figure, matplotlib.axes.Axes, float]:
     """Plot deviations from the mean for specific angular momentum."""
+    import matplotlib.pyplot as plt
 
     h_mean = float(np.mean(angular_momentum))
     time_index = np.arange(len(times))
@@ -112,8 +122,11 @@ def plot_angular_momentum_error(times, angular_momentum, output_path: Path | Non
     return fig, ax, h_mean
 
 
-def plot_energy_error(times, energy, output_path: Path | None = None):
+def plot_energy_error(
+    times: Sequence[str], energy: np.ndarray, output_path: Path | None = None
+) -> tuple[matplotlib.figure.Figure, matplotlib.axes.Axes, float]:
     """Plot deviations from the mean for specific orbital energy."""
+    import matplotlib.pyplot as plt
 
     e_mean = float(np.mean(energy))
     time_index = np.arange(len(times))
@@ -149,7 +162,7 @@ def main():
     parser.add_argument(
         "csv_path",
         nargs="?",
-        default=Path(__file__).resolve().parent / "STK_input" / "ISS_ZARYA_25544_STK_results.csv",
+        default=Path(__file__).resolve().parent / "STK_input" / "Satellite1_Results.csv",
         type=Path,
         help="Path to the STK results CSV file.",
     )
@@ -177,6 +190,11 @@ def main():
         help="Display the plot windows after creating the figures.",
     )
     args = parser.parse_args()
+
+    # Select backend after parsing arguments so importing this module has no
+    # side-effects. Use non-interactive Agg when not showing windows.
+    if not args.show:
+        matplotlib.use("Agg")
 
     # Ensure output directory exists
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
