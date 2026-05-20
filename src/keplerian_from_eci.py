@@ -56,4 +56,4 @@ def keplerian_from_eci(r_vec: np.ndarray, v_vec: np.ndarray) -> tuple[float, flo
     if np.isnan(omega_big):
         omega_big = 0.0
 
-    return a, e, i, omega_big, omega_small, nu
+    return float(a), float(e), float(i), float(omega_big), float(omega_small), float(nu)
