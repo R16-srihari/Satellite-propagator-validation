@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-This repository simulates and validates a 24-hour low Earth orbit (LEO) trajectory using a two-body gravitational model and a custom self-implemented adaptive DOP853 / RK7(8) integrator.
+This repository simulates and validates a 24-hour low Earth orbit (LEO) trajectory using a two-body gravitational model and a custom self-implemented adaptive DOP853 / RK7(8) integrator (`rk78_integrate.py`).
 
 The project has two main executable Python programs:
 
@@ -109,6 +109,6 @@ OWNER=<owner> REPO=RK-7-8-integrator-validation TAG=stk-latest ./scripts/update_
 ## 4. Limitations and Scope
 
 - Two-body model only; no perturbations
-- Single-body Earth-centered dynamics
-- No uncertainty modeling or estimation framework
+- Single-body Earth-centred dynamics
+- No uncertainty modelling or estimation framework
 - Validation is focused on conservation and analytical consistency, not operational navigation performance
