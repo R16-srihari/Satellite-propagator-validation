@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-This repository simulates and validates a 24-hour low Earth orbit (LEO) trajectory using a two-body gravitational model and a custom self-implemented adaptive DOP853 / RK7(8) integrator (`rk78_integrate`).
+This repository simulates and validates a 24-hour low Earth orbit (LEO) trajectory using a two-body gravitational model and a custom self-implemented adaptive DOP853 / RK7(8) integrator.
 
 The project has two main executable Python programs:
 
@@ -21,29 +21,35 @@ Core assumptions:
 
 ```text
 RK-7-8-integrator-validation/
+├── .gitignore
+├── .vscode/
 ├── leo_simulator.py
 ├── STK_output_energy_angular_momentum_errors.py
 ├── requirements.txt
 ├── README.md
+├── docs/
+│   └── end_to_end_documentation.md
 ├── STK_input/
-│   ├── Satellite1.opm
-│   └── Satellite1_Results.csv (canonical file distributed as release asset; see section 8)
+│   └── Satellite1.opm.example
 ├── src/
-│   ├── constants.py
-│   ├── orbital_parameters.py
-│   ├── gravity_ode.py
-│   ├── eci_from_keplerian.py
-│   ├── keplerian_from_eci.py
+│   ├── __init__.py
 │   ├── analytical_solution.py
-│   ├── rk78_integrate.py
-│   └── export_results.py
+│   ├── constants.py
+│   ├── eci_from_keplerian.py
+│   ├── export_results.py
+│   ├── gravity_ode.py
+│   ├── keplerian_from_eci.py
+│   ├── orbital_parameters.py
+│   └── rk78_integrate.py
 ├── validation/
-│   ├── energy_check.py
+│   ├── __init__.py
 │   ├── compare_analytical.py
+│   ├── energy_check.py
 │   └── plot_conservation.py
 ├── scripts/
 │   ├── update_release_asset.sh
-│   └── update_release_asset.ps1
+│   ├── update_release_asset.ps1
+│   └── update_release_asset.sh.bak
 └── output/
 ```
 
@@ -69,8 +75,8 @@ Main packages:
 
 The simulation expects the STK input files in `STK_input/`:
 
-- `Satellite1_Results.csv`
-- `Satellite1.opm`
+- `Satellite1_Results.csv` (downloaded from GitHub Releases)
+- `Satellite1.opm` (downloaded from GitHub Releases)
 
 If either file is missing, download the release assets from GitHub Releases and place them in `STK_input/`.
 
@@ -84,7 +90,7 @@ You can also download the two assets manually from the repository's Releases pag
 
 ### 3.2 Updating the release assets
 
-Use the provided scripts to publish updated STK files to the `stk-latest` release. Both scripts upload `STK_input/Satellite1_Results.csv` and `STK_input/Satellite1.opm` when present, replacing any existing assets with the same name.
+Use the provided scripts to publish updated STK files to the `stk-latest` release. Both scripts upload `STK_input/Satellite1_Results.csv` and `STK_input/Satellite1.opm` when present, replacing any existing assets.
 
 PowerShell:
 
