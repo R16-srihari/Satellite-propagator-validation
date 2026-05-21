@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import sys
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -11,6 +12,7 @@ from src.constants import constants
 from src.gravity_ode import gravity_ode
 from src.orbital_parameters import orbital_parameters
 from src.rk78_integrate import rk78_integrate
+from src.symplectic_integrate import symplectic_integrate
 from src.export_results import export_results
 from validation.compare_analytical import compare_analytical
 from validation.energy_check import energy_check
@@ -41,22 +43,68 @@ class Tee:
             stream.flush()
 
 
-def run_simulation() -> None:
+INTEGRATOR_DISPLAY_NAMES = {
+    "rk78": "Custom RK7(8)",
+    "symplectic": "Velocity Verlet (Symplectic)",
+}
+
+
+def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="LEO satellite orbit simulation and validation")
+    parser.add_argument(
+        "--integrator",
+        choices=sorted(INTEGRATOR_DISPLAY_NAMES.keys()),
+        default="rk78",
+        help="Integrator scheme used for propagation",
+    )
+    return parser.parse_args(argv)
+
+
+def run_simulation(argv: list[str] | None = None) -> None:
+    args = _parse_args(argv)
+
     root = Path(__file__).resolve().parent
     output_dir = root / "output"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    log_file = output_dir / "terminal_log.txt"
+    run_output_dir = output_dir / args.integrator
+    run_output_dir.mkdir(parents=True, exist_ok=True)
+
+    log_file = run_output_dir / "terminal_log.txt"
+    root_log_file = output_dir / "terminal_log.txt"
+
+    root_log_file.write_text(
+        (
+            "This run writes logs under integrator-specific folders.\n"
+            f"Latest run integrator: {args.integrator}\n"
+            f"Latest run log: {log_file}\n"
+        ),
+        encoding="utf-8",
+    )
 
     with log_file.open("w", encoding="utf-8") as handle:
         tee = Tee(sys.stdout, handle)
         with redirect_stdout(tee):
-            _run_simulation_core(output_dir, log_file)
+            _run_simulation_core(run_output_dir, log_file, args.integrator)
 
 
-def _run_simulation_core(output_dir: Path, log_file: Path) -> None:
+def _run_selected_integrator(
+    integrator: str,
+    t_output: np.ndarray,
+    y0: np.ndarray,
+    options: dict,
+):
+    if integrator == "rk78":
+        return rk78_integrate(gravity_ode, t_output, y0, options)
+
+    return symplectic_integrate(gravity_ode, t_output, y0, options)
+
+
+def _run_simulation_core(output_dir: Path, log_file: Path, integrator: str) -> None:
+    integrator_name = INTEGRATOR_DISPLAY_NAMES[integrator]
+
     print("\n========== LEO SATELLITE ORBIT SIMULATOR ==========")
-    print("RK7(8) Integrator (custom implementation)")
+    print(f"Integrator: {integrator_name}")
     print("=====================================================\n")
 
     const = constants()
@@ -105,12 +153,13 @@ def _run_simulation_core(output_dir: Path, log_file: Path) -> None:
     print("AbsTol:                 1e-14")
     print("MaxStep:                60 s")
     print("InternalStep:           0.2 s")
+    print(f"Output directory:       {output_dir}")
     print("=========================\n")
 
-    print("=== RUNNING CUSTOM RK7(8) INTEGRATOR ===")
+    print(f"=== RUNNING {integrator_name.upper()} ===")
     print("Integration in progress...\n")
 
-    t, y_output, stats = rk78_integrate(gravity_ode, t_output, y0, options)
+    t, y_output, stats = _run_selected_integrator(integrator, t_output, y0, options)
 
     print("\n=== INTEGRATION COMPLETE ===")
     print(f"Solver steps:           {stats.accepted_steps}")
