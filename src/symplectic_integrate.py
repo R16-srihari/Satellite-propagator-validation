@@ -5,6 +5,8 @@ from typing import Callable
 
 import numpy as np
 
+from src.constants import constants
+
 
 @dataclass
 class SymplecticStats:
@@ -18,19 +20,16 @@ class SymplecticStats:
 
 
 def _as_1d_float_array(values: np.ndarray) -> np.ndarray:
+    
     return np.asarray(values, dtype=float).reshape(-1)
 
 
-def _extract_acceleration(fun: Callable[[float, np.ndarray], np.ndarray], t: float, y: np.ndarray) -> np.ndarray:
-    derivative = _as_1d_float_array(fun(t, y))
-    if derivative.size != y.size:
-        raise ValueError("fun must return a derivative vector with the same size as y0.")
+def _acceleration(r_vec: np.ndarray, mu: float) -> np.ndarray:
+    r_mag = float(np.linalg.norm(r_vec))
+    if r_mag == 0.0:
+        raise ValueError("Position magnitude must be nonzero for gravitational acceleration.")
 
-    half = y.size // 2
-    if y.size % 2 != 0 or half == 0:
-        raise ValueError("Symplectic integrator expects an even-sized state vector [r, v].")
-
-    return derivative[half:]
+    return -mu * r_vec / (r_mag**3)
 
 
 def symplectic_integrate(
@@ -47,6 +46,8 @@ def symplectic_integrate(
     step_size = abs(float(requested_step))
     if step_size <= 0.0:
         raise ValueError("Symplectic step size must be positive.")
+
+    mu = float(options.get("Mu", constants().mu_earth))
 
     t_eval = np.asarray(t_eval, dtype=float).reshape(-1)
     if t_eval.size < 2:
@@ -67,7 +68,6 @@ def symplectic_integrate(
         raise ValueError("Symplectic integrator expects even-sized [r, v] state vectors.")
 
     t_current = float(t_eval[0])
-    t_final = float(t_eval[-1])
 
     y_out = np.empty((t_eval.size, y_current.size), dtype=float)
     y_out[0] = y_current
@@ -91,14 +91,13 @@ def symplectic_integrate(
             r_current = y_current[:half]
             v_current = y_current[half:]
 
-            a_current = _extract_acceleration(fun, t_current, y_current)
+            a_current = _acceleration(r_current, mu)
             function_evaluations += 1
 
             v_half = v_current + 0.5 * h * a_current
             r_new = r_current + h * v_half
 
-            y_probe = np.concatenate((r_new, v_half))
-            a_new = _extract_acceleration(fun, t_current + h, y_probe)
+            a_new = _acceleration(r_new, mu)
             function_evaluations += 1
 
             v_new = v_half + 0.5 * h * a_new
