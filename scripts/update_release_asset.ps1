@@ -1,6 +1,6 @@
 param(
   [string]$Owner = 'R16-srihari',
-  [string]$Repo  = 'RK-7-8-integrator-validation',
+  [string]$Repo  = 'Satellite-propagator-validation',
   [string]$Tag   = 'stk-latest',
   [string]$File  = 'STK_input/Satellite1_Results.csv'
 )

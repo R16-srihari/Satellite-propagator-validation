@@ -1,4 +1,4 @@
-# RK-7-8 Integrator Validation for LEO Orbit Propagation
+# Satellite-propagator-validation for LEO Orbit Propagation
 
 ## 1. Overview
 
@@ -20,7 +20,7 @@ Core assumptions:
 ## 2. Repository Layout
 
 ```text
-RK-7-8-integrator-validation/
+Satellite-propagator-validation/
 ├── .gitignore
 ├── .vscode/
 ├── leo_simulator.py
@@ -83,7 +83,7 @@ If either file is missing, download the release assets from GitHub Releases and 
 Recommended download workflow with GitHub CLI:
 
 ```bash
-gh release download stk-latest --repo R16-srihari/RK-7-8-integrator-validation -p Satellite1_Results.csv -p Satellite1.opm -D STK_input
+gh release download stk-latest --repo R16-srihari/Satellite-propagator-validation -p Satellite1_Results.csv -p Satellite1.opm -D STK_input
 ```
 
 You can also download the two assets manually from the repository's Releases page and copy them into `STK_input/`.
@@ -95,13 +95,13 @@ Use the provided scripts to publish updated STK files to the `stk-latest` releas
 PowerShell:
 
 ```powershell
-.\scripts\update_release_asset.ps1 -Owner <owner> -Repo RK-7-8-integrator-validation -Tag stk-latest
+.\scripts\update_release_asset.ps1 -Owner <owner> -Repo Satellite-propagator-validation -Tag stk-latest
 ```
 
 Bash:
 
 ```bash
-OWNER=<owner> REPO=RK-7-8-integrator-validation TAG=stk-latest ./scripts/update_release_asset.sh
+OWNER=<owner> REPO=Satellite-propagator-validation TAG=stk-latest ./scripts/update_release_asset.sh
 ```
 
 ---

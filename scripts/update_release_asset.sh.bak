@@ -2,7 +2,7 @@
 set -euo pipefail
 # Usage: edit OWNER/REPO/TAG below or export env vars OWNER,REPO,TAG before running
 OWNER=${OWNER:-R16-srihari}
-REPO=${REPO:-RK-7-8-integrator-validation}
+REPO=${REPO:-Satellite-propagator-validation}
 TAG=${TAG:-stk-latest}
 FILE=STK_input/Satellite1_Results.csv
 
