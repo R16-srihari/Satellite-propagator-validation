@@ -5,6 +5,19 @@ OWNER=${OWNER:-R16-srihari}
 REPO=${REPO:-Satellite-propagator-validation}
 TAG=${TAG:-stk-latest}
 FILES=(STK_input/Satellite1_Results.csv STK_input/Satellite1.opm)
+TEMP_DIRS=()
+
+version_suffix() {
+  date -u +%Y%m%dT%H%M%SZ-$$-$RANDOM
+}
+
+cleanup() {
+  for dir in "${TEMP_DIRS[@]}"; do
+    rm -rf "$dir"
+  done
+}
+
+trap cleanup EXIT
 
 # Require at least one existing file
 found_any=0
@@ -24,14 +37,17 @@ for FILE in "${FILES[@]}"; do
     continue
   fi
 
-  # Try to get existing asset id and delete it if present
-  asset_id=$(gh api repos/$OWNER/$REPO/releases/tags/$TAG --jq ".assets[] | select(.name==\"$(basename $FILE)\") | .id" 2>/dev/null || true)
-  if [[ -n "$asset_id" ]]; then
-    echo "Deleting existing asset id $asset_id for $(basename $FILE)"
-    gh api repos/$OWNER/$REPO/releases/assets/$asset_id -X DELETE
-  fi
+  asset_base=$(basename "$FILE")
+  asset_stem=${asset_base%.*}
+  asset_ext=${asset_base##*.}
+  asset_name="${asset_stem}-$(version_suffix).${asset_ext}"
+  temp_dir=$(mktemp -d)
+  TEMP_DIRS+=("$temp_dir")
+  temp_file="$temp_dir/$asset_name"
 
-  echo "Uploading $FILE to release $TAG in $OWNER/$REPO"
-  gh release upload $TAG $FILE --repo $OWNER/$REPO --clobber
+  cp "$FILE" "$temp_file"
+
+  echo "Uploading $FILE as $asset_name to release $TAG in $OWNER/$REPO"
+  gh release upload $TAG "$temp_file" --repo $OWNER/$REPO
   echo "Upload complete for $FILE"
 done

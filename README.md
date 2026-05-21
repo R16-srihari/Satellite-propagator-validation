@@ -78,19 +78,13 @@ The simulation expects the STK input files in `STK_input/`:
 - `Satellite1_Results.csv` (downloaded from GitHub Releases)
 - `Satellite1.opm` (downloaded from GitHub Releases)
 
-If either file is missing, download the release assets from GitHub Releases and place them in `STK_input/`.
+If either file is missing, download the latest versioned assets from the repository's Releases page and place them in `STK_input/`. The release uploader now keeps each published STK file as a unique timestamped asset instead of replacing an older upload.
 
-Recommended download workflow with GitHub CLI:
-
-```bash
-gh release download stk-latest --repo R16-srihari/Satellite-propagator-validation -p Satellite1_Results.csv -p Satellite1.opm -D STK_input
-```
-
-You can also download the two assets manually from the repository's Releases page and copy them into `STK_input/`.
+You can also copy the local working files into `STK_input/` if you are regenerating them from a simulation run.
 
 ### 3.2 Updating the release assets
 
-Use the provided scripts to publish updated STK files to the `stk-latest` release. Both scripts upload `STK_input/Satellite1_Results.csv` and `STK_input/Satellite1.opm` when present, replacing any existing assets.
+Use the provided scripts to publish updated STK files to the `stk-latest` release. Both scripts upload `STK_input/Satellite1_Results.csv` and `STK_input/Satellite1.opm` when present, and each upload is stored under a unique versioned asset name so previous uploads remain available.
 
 PowerShell:
 
