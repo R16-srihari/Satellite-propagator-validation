@@ -3,10 +3,10 @@
 Integrator: Custom RK7(8)
 =====================================================
 
-Using OPM file for initial orbit: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\STK_input\Satellite1.opm
+Using OPM Cartesian state for initial orbit: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\STK_input\Satellite1.opm
 
 === LEO ORBIT PARAMETERS ===
-Altitude:                457.1 km
+Altitude:                450.0 km
 Semi-major axis:         6.828137e+06 m
 Eccentricity:            0.000000
 Inclination:             51.6 degrees
@@ -19,8 +19,9 @@ Epoch (UTC):             2026-05-18 06:30:00
 =============================
 
 === INITIAL CONDITIONS ===
+Initial state source: OPM Cartesian fields
 Position [m]:       [6.828137e+06, 0.000000e+00, 0.000000e+00]
-Velocity [m/s]:     [0.000000e+00, 4.745836e+03, -5.987755e+03]
+Velocity [m/s]:     [0.000000e+00, 4.745836e+03, 5.987755e+03]
 Initial radius:     6.828137e+06 m
 Initial velocity:   7.640430e+03 m/s
 Epoch (UTC):         2026-05-18 06:30:00
@@ -69,36 +70,36 @@ Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technolog
 === EXPORT SUMMARY ===
 Total points exported: 8641
 Time span: 24.00 hours (15.39 orbits)
-Energy variation (%): min=-7.66e-13, max=3.83e-13, mean=2.87e-13
-Angular momentum variation (%): 5.70e-13
-Semi-major axis variation (m): 7.82e-08
+Energy variation (%): min=-9.57e-13, max=8.55e-13, mean=3.41e-13
+Angular momentum variation (%): 8.92e-13
+Semi-major axis variation (m): 1.24e-07
 ======================
 
 === VALIDATION ===
 
 Energy Conservation Test:
-  Initial energy:                 -2.918808174176939e+07 J/kg
-  Expected energy (analytical):   -2.918808174176939e+07 J/kg
-  Max absolute energy error:      2.235174e-07 J/kg
-  Max relative energy error:      7.657832e-15 (7.66e-13 %)
-  Mean relative energy error:     2.869789e-15 (2.87e-13 %)
+  Initial energy:                 -2.918808176373731e+07 J/kg
+  Expected energy (analytical):   -2.918808176373731e+07 J/kg
+  Max absolute energy error:      2.793968e-07 J/kg
+  Max relative energy error:      9.572290e-15 (9.57e-13 %)
+  Mean relative energy error:     3.412244e-15 (3.41e-13 %)
   Status: EXCELLENT - Energy conserved to < 1e-9 relative error
   Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\energy_conservation.csv
 
   Angular momentum (specific) conservation:
-  Initial |h|:                   5.216989960572021e+10 m^2/s
-  Max absolute |h| error:        1.983643e-04 m^2/s
-  Max relative |h| error:        3.802274e-15 (3.80e-13 %)
-  Mean relative |h| error:       1.414162e-15 (1.41e-13 %)
+  Initial |h|:                   5.216989958608781e+10 m^2/s
+  Max absolute |h| error:        2.441406e-04 m^2/s
+  Max relative |h| error:        4.679722e-15 (4.68e-13 %)
+  Mean relative |h| error:       1.701788e-15 (1.70e-13 %)
   Status: EXCELLENT - Angular momentum conserved to < 1e-9 relative error
   Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\angular_momentum_conservation.csv
 
 Analytical Comparison Test:
   Computing analytical solution...
-  Max position error:             2.198454e-06 m (3.219699e-13 rel)
-  Mean position error:            6.026549e-07 m (8.826052e-14 rel)
-  RMS position error:             8.917855e-07 m
-  Status: EXCELLENT - Position error < 1 meter
+  Max position error:             1.070233e+07 m (1.567387e+00 rel)
+  Mean position error:            6.836213e+06 m (1.001183e+00 rel)
+  RMS position error:             7.586767e+06 m
+  Status: WARNING - Position error exceeds tolerance
 
   Orbital Period Verification:
   Theoretical period:             5615.19 s (93.59 min)

@@ -7,10 +7,10 @@ from pathlib import Path
 
 import numpy as np
 
-from src.eci_from_keplerian import eci_from_keplerian
 from src.constants import constants
 from src.gravity_ode import gravity_ode
-from src.orbital_parameters import orbital_parameters
+from src.eci_from_keplerian import eci_from_keplerian
+from src.orbital_parameters import orbital_parameters, read_opm_cartesian_state
 from src.rk78_integrate import rk78_integrate
 from src.symplectic_integrate import symplectic_integrate
 from src.export_results import export_results
@@ -112,14 +112,21 @@ def _run_simulation_core(output_dir: Path, log_file: Path, integrator: str) -> N
 
     print("=== INITIAL CONDITIONS ===")
 
-    r_init, v_init = eci_from_keplerian(
-        orbit.a,
-        orbit.e,
-        orbit.i,
-        orbit.omega_big,
-        orbit.omega_small,
-        orbit.nu,
-    )
+    cartesian_state = read_opm_cartesian_state()
+    if cartesian_state is not None:
+        r_init, v_init = cartesian_state
+        print("Initial state source: OPM Cartesian fields")
+    else:
+        r_init, v_init = eci_from_keplerian(
+            orbit.a,
+            orbit.e,
+            orbit.i,
+            orbit.omega_big,
+            orbit.omega_small,
+            orbit.nu,
+        )
+        print("Initial state source: OrbitParameters fallback")
+
     y0 = np.concatenate((r_init, v_init))
 
     print(f"Position [m]:       [{r_init[0]:.6e}, {r_init[1]:.6e}, {r_init[2]:.6e}]")
