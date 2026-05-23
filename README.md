@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-This repository simulates and validates a 24-hour low Earth orbit (LEO) trajectory using a two-body gravitational model and a custom self-implemented adaptive DOP853 / RK7(8) integrator (`rk78_integrate.py`).
+This repository simulates and validates a 24-hour low Earth orbit (LEO) trajectory using a two-body gravitational model and custom integrators: an adaptive DOP853-coefficient RK7(8)-style stepper (`rk78_integrate.py`) and fixed-step symplectic Velocity Verlet (`symplectic_integrate.py`).
 
 The project has two main executable Python programs:
 
@@ -14,6 +14,12 @@ Core assumptions:
 - Dynamics: point-mass Earth gravity only (no drag, J2, SRP, third-body perturbations)
 - Typical initial orbit: ~450 km circular LEO, inclination ~51.6°
 - Main simulation horizon: 24 hours
+
+Initialization behavior in the current `main` branch:
+
+- The simulator prefers OPM Cartesian fields (`X`, `Y`, `Z`, `X_DOT`, `Y_DOT`, `Z_DOT`) from `STK_input/Satellite1.opm` to build the propagated initial state `y0 = [r, v]` directly.
+- If Cartesian fields are unavailable, it falls back to a Keplerian reconstruction path.
+- `OrbitParameters` is retained as a lightweight summary object for reporting, analytical comparison setup, and CSV summary metrics.
 
 ---
 
@@ -28,9 +34,12 @@ Satellite-propagator-validation/
 ├── requirements.txt
 ├── README.md
 ├── docs/
-│   └── end_to_end_documentation.md
+│   └── Satellite-propagator-validation.wiki/
+│       └── End‐to‐End-Documentation.md
 ├── STK_input/
-│   └── Satellite1.opm.example
+│   ├── Satellite1.opm
+│   ├── Satellite1.opm.example
+│   └── Satellite1_Results.csv
 ├── src/
 │   ├── __init__.py
 │   ├── analytical_solution.py
@@ -40,7 +49,8 @@ Satellite-propagator-validation/
 │   ├── gravity_ode.py
 │   ├── keplerian_from_eci.py
 │   ├── orbital_parameters.py
-│   └── rk78_integrate.py
+│   ├── rk78_integrate.py
+│   └── symplectic_integrate.py
 ├── validation/
 │   ├── __init__.py
 │   ├── compare_analytical.py
