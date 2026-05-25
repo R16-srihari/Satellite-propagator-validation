@@ -12,7 +12,7 @@ The project has two main executable Python programs:
 Core assumptions:
 
 - Dynamics: point-mass Earth gravity only (no drag, J2, SRP, third-body perturbations)
-- Typical initial orbit: ~450 km circular LEO, inclination ~51.6°
+- Initial conditions are provided in `STK_input/Satellite1.opm` and are consistent with the STK simulation for direct comparison
 - Main simulation horizon: 24 hours
 
 ---

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_conservation(t_vector, y_matrix, orbit_params, output_dir, num_samples: int = 20):
+def plot_conservation(t_vector, y_matrix, orbit_params, output_dir):
     """Plot conserved quantities vs time with analytical baselines and zoomed error views."""
     t_vector = np.asarray(t_vector, dtype=float).reshape(-1)
     y_matrix = np.asarray(y_matrix, dtype=float)
@@ -25,12 +25,7 @@ def plot_conservation(t_vector, y_matrix, orbit_params, output_dir, num_samples:
     energy_error = energy - orbit_params.energy
     h_error = h_mag - orbit_params.h_mag
 
-    n_points = t_vector.size
-    sample_indices = np.linspace(0, n_points - 1, num_samples, dtype=int)
-    sample_indices = np.unique(sample_indices)
-
     time_hours = t_vector / 3600.0
-    sample_time_hours = time_hours[sample_indices]
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
@@ -38,15 +33,6 @@ def plot_conservation(t_vector, y_matrix, orbit_params, output_dir, num_samples:
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 8))
 
     ax1.plot(time_hours, energy, linewidth=1.2, label="Numerical Energy")
-    ax1.scatter(
-        sample_time_hours,
-        energy[sample_indices],
-        s=40,
-        marker="o",
-        color="red",
-        label=f"Sampled ({num_samples} points)",
-        zorder=3,
-    )
     ax1.plot(time_hours, energy_baseline, "--", linewidth=1.5, color="green", label="Analytical Baseline")
     ax1.set_xlabel("Time (hours)")
     ax1.set_ylabel("Specific Energy (J/kg)")
@@ -55,14 +41,6 @@ def plot_conservation(t_vector, y_matrix, orbit_params, output_dir, num_samples:
     ax1.legend(loc="best")
 
     ax2.plot(time_hours, energy_error * 1e7, linewidth=1.2, color="darkblue", label="Error (×1e-7 J/kg)")
-    ax2.scatter(
-        sample_time_hours,
-        energy_error[sample_indices] * 1e7,
-        s=40,
-        marker="o",
-        color="red",
-        zorder=3,
-    )
     ax2.axhline(0, color="green", linestyle="--", linewidth=1.5, label="Zero")
     ax2.set_xlabel("Time (hours)")
     ax2.set_ylabel("Error (×1e-7 J/kg)")
@@ -78,15 +56,6 @@ def plot_conservation(t_vector, y_matrix, orbit_params, output_dir, num_samples:
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 8))
 
     ax1.plot(time_hours, h_mag, linewidth=1.2, label="Numerical |h|")
-    ax1.scatter(
-        sample_time_hours,
-        h_mag[sample_indices],
-        s=40,
-        marker="o",
-        color="red",
-        label=f"Sampled ({num_samples} points)",
-        zorder=3,
-    )
     ax1.plot(time_hours, h_baseline, "--", linewidth=1.5, color="green", label="Analytical Baseline")
     ax1.set_xlabel("Time (hours)")
     ax1.set_ylabel("Specific Angular Momentum (m^2/s)")
@@ -95,14 +64,6 @@ def plot_conservation(t_vector, y_matrix, orbit_params, output_dir, num_samples:
     ax1.legend(loc="best")
 
     ax2.plot(time_hours, h_error * 1e4, linewidth=1.2, color="darkblue", label="Error (×1e-4 m^2/s)")
-    ax2.scatter(
-        sample_time_hours,
-        h_error[sample_indices] * 1e4,
-        s=40,
-        marker="o",
-        color="red",
-        zorder=3,
-    )
     ax2.axhline(0, color="green", linestyle="--", linewidth=1.5, label="Zero")
     ax2.set_xlabel("Time (hours)")
     ax2.set_ylabel("Error (×1e-4 m^2/s)")

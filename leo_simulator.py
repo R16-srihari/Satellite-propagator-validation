@@ -150,43 +150,43 @@ def _run_simulation_core(output_dir: Path, log_file: Path, integrator: str) -> N
     print(f"Output points:          {t_output.size}")
 
     options = {
-        "RelTol": 1e-12,
-        "AbsTol": 1e-14,
-        "MaxStep": 60.0,
-        "InternalStep": 0.2,
+        "RelTol": 1e-10,
+        "AbsTol": 1e-12,
+        "MaxStep": 120.0,
+        "InternalStep": 1e-3,
     }
 
     print("RelTol:"                 f"                {options['RelTol']:.0e}")
     print("AbsTol:"                 f"                {options['AbsTol']:.0e}")
     print("MaxStep:"                f"                {options['MaxStep']:.0e} s")
-    print("InternalStep:"           f"                {options['InternalStep']:.1f} s")
+    print("InternalStep:"           f"                {options['InternalStep']:.1e} s")
     print(f"Output directory:       {output_dir}")
     print("=========================\n")
 
     print(f"=== RUNNING {integrator_name.upper()} ===")
     print("Integration in progress...\n")
 
-    t, y_output, stats = _run_selected_integrator(integrator, t_output, y0, options)
+    t_adapt, y_adapt, stats = _run_selected_integrator(integrator, t_output, y0, options)
 
     print("\n=== INTEGRATION COMPLETE ===")
     print(f"Solver steps:           {stats.accepted_steps}")
     print(f"Rejected steps:         {stats.rejected_steps}")
     print(f"Function evaluations:   {stats.function_evaluations}")
-    print(f"Output points:          {y_output.shape[0]}")
+    print(f"Output points:          {t_adapt.size}")
     print("===========================\n")
 
     print("=== SAVING RESULTS ===")
-    export_results(t, y_output, orbit, output_dir)
+    export_results(t_adapt, y_adapt, orbit, output_dir)
 
     print("=== VALIDATION ===")
     print("\nEnergy Conservation Test:")
-    energy_check(t, y_output, orbit, output_dir)
+    energy_check(t_adapt, y_adapt, orbit, output_dir)
 
     print("\nAnalytical Comparison Test:")
-    compare_analytical(t, y_output, orbit, output_dir)
+    compare_analytical(t_adapt, y_adapt, orbit, output_dir)
 
     print("\nConservation Plots:")
-    plot_conservation(t, y_output, orbit, output_dir, num_samples=20)
+    plot_conservation(t_adapt, y_adapt, orbit, output_dir)
 
     print("\n===== SIMULATION COMPLETED SUCCESSFULLY =====\n")
     print(f"Terminal log saved to: {log_file}")
