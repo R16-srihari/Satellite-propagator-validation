@@ -86,7 +86,7 @@ def rk78_integrate(
         options = {}
 
     rel_tol = float(options.get("RelTol", 1e-12))
-    abs_tol = float(options.get("AbsTol", 1e-13))
+    abs_tol = float(options.get("AbsTol", 1e-14))
     max_step = float(options.get("MaxStep", 60.0))
     requested_step = options.get("InternalStep", options.get("InitialStep", options.get("FirstStep")))
 
