@@ -20,7 +20,9 @@ import matplotlib
 import numpy as np
 
 
-MU_EARTH = 398600.4418  # km^3 / s^2
+MU_EARTH_KM = 398600.4418  # km^3 / s^2
+# Earth's gravitational parameter in m^3 / s^2 (converted from km^3/s^2)
+MU_EARTH = MU_EARTH_KM * 1e9  # m^3 / s^2
 
 # Directory to write output files into (project root / output)
 OUTPUT_DIR = Path(__file__).resolve().parent / "output"
@@ -46,6 +48,15 @@ def load_time_series(csv_path: Path) -> tuple[list[str], np.ndarray, np.ndarray]
 
     with csv_path.open(newline="", encoding="utf-8") as handle:
         reader = csv.DictReader(handle)
+        fieldnames = reader.fieldnames or []
+        # Accept either STK's meter-based or older km-based column names.
+        g_key = "Delaunay_G (m^2/sec)" if "Delaunay_G (m^2/sec)" in fieldnames else "Delaunay_G (km^2/sec)"
+        a_key = "Semimajor_Axis (m)" if "Semimajor_Axis (m)" in fieldnames else "Semi-major Axis (km)"
+        # We want to work in SI (meters). If the file provides km-based values,
+        # scale them into meters here.
+        g_scale = 1.0 if g_key.endswith("(m^2/sec)") else 1_000_000.0
+        a_scale = 1.0 if a_key.endswith("(m)") else 1000.0
+
         for row in reader:
             time_value = row.get("Time (UTCG)", "")
             
@@ -53,15 +64,16 @@ def load_time_series(csv_path: Path) -> tuple[list[str], np.ndarray, np.ndarray]
             if time_value and "Statistics" in time_value:
                 break
             
-            g_value = row.get("Delaunay_G (km^2/sec)", "")
-            a_value = row.get("Semi-major Axis (km)", "")
+            g_value = row.get(g_key, "")
+            a_value = row.get(a_key, "")
 
             if not time_value or not g_value or not a_value:
                 continue
 
             try:
-                delaunay_g_value = float(g_value)
-                semi_major_axis_value = float(a_value)
+                # convert incoming values to meters / m^2 as needed
+                delaunay_g_value = float(g_value) * g_scale
+                semi_major_axis_value = float(a_value) * a_scale
             except ValueError:
                 continue
 
@@ -76,7 +88,11 @@ def load_time_series(csv_path: Path) -> tuple[list[str], np.ndarray, np.ndarray]
 
 
 def compute_energy(semi_major_axis: np.ndarray, mu: float = MU_EARTH) -> np.ndarray:
-    """Return the specific orbital energy for each semi-major axis value."""
+    """Return the specific orbital energy for each semi-major axis value.
+
+    Inputs are expected in SI: `semi_major_axis` in meters and `mu` in m^3/s^2.
+    Returns energy in m^2/s^2.
+    """
 
     return -mu / (2.0 * semi_major_axis)
 
@@ -135,7 +151,7 @@ def save_energies_to_csv(
     csv_path.parent.mkdir(parents=True, exist_ok=True)
     with csv_path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
-        writer.writerow(["Time (UTCG)", "Delaunay_G (km^2/sec)", "Specific_Orbital_Energy (km^2/s^2)"])
+        writer.writerow(["Time (UTCG)", "Delaunay_G (m^2/sec)", "Specific_Orbital_Energy (m^2/s^2)"])
         for time, h, e in zip(times, angular_momentum, energy):
             writer.writerow([time, f"{h:.12f}", f"{e:.12f}"])
 
@@ -148,7 +164,7 @@ def save_errors_to_csv(
     csv_path.parent.mkdir(parents=True, exist_ok=True)
     with csv_path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
-        writer.writerow(["Time (UTCG)", "Delaunay_G_error (km^2/sec)", "Specific_Orbital_Energy_error (km^2/s^2)"])
+        writer.writerow(["Time (UTCG)", "Delaunay_G_error (m^2/sec)", "Specific_Orbital_Energy_error (m^2/s^2)"])
         for time, he, ee in zip(times, h_error, e_error):
             writer.writerow([time, f"{he:.12e}", f"{ee:.12e}"])
 
@@ -173,7 +189,7 @@ def plot_angular_momentum_error(
     fig, ax = plt.subplots(figsize=(14, 6))
     ax.plot(time_index, h_error, color="tab:blue", linewidth=1.5)
     ax.axhline(0.0, color="black", linewidth=1.0, linestyle="--")
-    ax.set_ylabel("h - mean(h) [km^2/s]", fontsize=12)
+    ax.set_ylabel("h - mean(h) [m^2/s]", fontsize=12)
     ax.set_title("Specific Angular Momentum Error", fontsize=14, fontweight="bold")
     ax.grid(True, alpha=0.3)
     ax.set_xlabel("Sample index", fontsize=12)
@@ -211,7 +227,7 @@ def plot_energy_error(
     fig, ax = plt.subplots(figsize=(14, 6))
     ax.plot(time_index, e_error, color="tab:orange", linewidth=1.5)
     ax.axhline(0.0, color="black", linewidth=1.0, linestyle="--")
-    ax.set_ylabel("epsilon - mean(epsilon) [km^2/s^2]", fontsize=12)
+    ax.set_ylabel("epsilon - mean(epsilon) [m^2/s^2]", fontsize=12)
     ax.set_title("Specific Orbital Energy Error", fontsize=14, fontweight="bold")
     ax.grid(True, alpha=0.3)
     ax.set_xlabel("Sample index", fontsize=12)
@@ -299,9 +315,15 @@ def main():
         if args.opm and args.opm.exists():
             opm = parse_opm(args.opm)
             print(f"Using OPM file for analytical reference: {args.opm.resolve()}")
-            a0 = float(opm["a"])  # km
+            # OPM values are typically in km and km^3/s^2 for GM. Convert to meters.
+            a0_km = float(opm["a"])  # km
             e0 = float(opm["e"])  # unitless
-            gm = float(opm.get("gm", MU_EARTH))
+            gm_km = opm.get("gm")
+            if gm_km is not None:
+                gm_km = float(gm_km)
+            # convert to meters / m^3/s^2
+            a0 = a0_km * 1000.0  # meters
+            gm = (gm_km * 1e9) if gm_km is not None else MU_EARTH
             # specific angular momentum magnitude for Keplerian orbit: h = sqrt(mu * a * (1 - e^2))
             reference_h = float(np.sqrt(gm * a0 * (1.0 - e0**2)))
             reference_e = -float(gm / (2.0 * a0))
@@ -326,8 +348,8 @@ def main():
     save_energies_to_csv(times, angular_momentum, energy, args.output_csv)
 
     print(f"Loaded {len(times)} samples from {args.csv_path}")
-    print(f"Reference specific angular momentum: {h_ref:.12f} km^2/s")
-    print(f"Reference specific orbital energy:    {e_ref:.12f} km^2/s^2")
+    print(f"Reference specific angular momentum: {h_ref:.12f} m^2/s")
+    print(f"Reference specific orbital energy:    {e_ref:.12f} m^2/s^2")
     print(f"Angular momentum error figure saved to: {args.output_h}")
     print(f"Orbital energy error figure saved to: {args.output_e}")
     print(f"Energy time-series CSV saved to: {args.output_csv}")
