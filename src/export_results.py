@@ -91,6 +91,7 @@ def export_results(t_vector, y_matrix, orbit_params, output_dir):
 
     energy_array = np.zeros(num_points)
     h_mag_array = np.zeros(num_points)
+    h_vec = np.zeros((num_points, 3))
 
     for k in range(num_points):
         r_vec = y_fixed[k, 0:3]
@@ -99,22 +100,44 @@ def export_results(t_vector, y_matrix, orbit_params, output_dir):
         v = np.linalg.norm(v_vec)
 
         energy_array[k] = v**2 / 2.0 - const.mu_earth / r # Specific orbital energy (J/kg)
-        h_mag_array[k] = np.linalg.norm(np.cross(r_vec, v_vec)) # Specific angular momentum magnitude (m^2/s)
+        h_vec[k, :] = np.cross(r_vec, v_vec)
+        h_mag_array[k] = np.linalg.norm(h_vec[k, :]) # Specific angular momentum magnitude (m^2/s)
 
     e_ref = energy_array[0]
+    d_e_abs = energy_array - e_ref
     d_e_rel = (energy_array - e_ref) / abs(e_ref)
 
     energy_df = pd.DataFrame(
         {
             "time_s": t_fixed,
             "energy_Jkg": energy_array,
+            "dE_abs": d_e_abs,
             "dE_rel": d_e_rel,
-            "h_mag_m2s": h_mag_array,
         }
     )
     energy_file = output_path / "orbit_energy.csv"
     energy_df.to_csv(energy_file, index=False)
     print(f"Saved: {energy_file}")
+
+    # Save angular momentum time series (vector + magnitude + relative change)
+    h_init =h_mag_array[0] 
+    d_h_abs = h_mag_array - h_init
+    d_h_rel = d_h_abs / abs(h_init)
+
+    angmom_df = pd.DataFrame(
+        {
+            "time_s": t_fixed,
+            "hx": h_vec[:, 0],
+            "hy": h_vec[:, 1],
+            "hz": h_vec[:, 2],
+            "h_mag": h_mag_array,
+            "dH_abs": d_h_abs,
+            "dH_rel": d_h_rel,
+        }
+    )
+    angmom_file = output_path / "orbit_angular_momentum.csv"
+    angmom_df.to_csv(angmom_file, index=False)
+    print(f"Saved: {angmom_file}")
 
     print("\n=== EXPORT SUMMARY ===")
     print(f"Total points exported: {num_points}")

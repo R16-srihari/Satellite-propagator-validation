@@ -2,6 +2,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 def plot_conservation(t_vector, y_matrix, orbit_params, output_dir):
@@ -9,15 +10,24 @@ def plot_conservation(t_vector, y_matrix, orbit_params, output_dir):
     t_vector = np.asarray(t_vector, dtype=float).reshape(-1)
     y_matrix = np.asarray(y_matrix, dtype=float)
 
-    r_vec = y_matrix[:, 0:3]
-    v_vec = y_matrix[:, 3:6]
-
+    # Prefer exported energy/angular momentum CSVs if present
+    energy_file = Path(output_dir) / "orbit_energy.csv"
+    angmom_file = Path(output_dir) / "orbit_angular_momentum.csv"
     mu_earth = 3.986004418e14
-    r_mag = np.linalg.norm(r_vec, axis=1)
-    v_mag = np.linalg.norm(v_vec, axis=1)
-
-    energy = v_mag**2 / 2.0 - mu_earth / r_mag
-    h_mag = np.linalg.norm(np.cross(r_vec, v_vec), axis=1)
+    if energy_file.exists() and angmom_file.exists():
+        df_e = pd.read_csv(energy_file)
+        df_h = pd.read_csv(angmom_file)
+        print(f"  Using exported energy and angular momentum from {energy_file} and {angmom_file}")
+        t_vector = np.asarray(df_e["time_s"], dtype=float).reshape(-1)
+        energy = np.asarray(df_e["energy_Jkg"], dtype=float)
+        h_mag = np.asarray(df_h["h_mag"], dtype=float)
+    else:
+        r_vec = y_matrix[:, 0:3]
+        v_vec = y_matrix[:, 3:6]
+        r_mag = np.linalg.norm(r_vec, axis=1)
+        v_mag = np.linalg.norm(v_vec, axis=1)
+        energy = v_mag**2 / 2.0 - mu_earth / r_mag
+        h_mag = np.linalg.norm(np.cross(r_vec, v_vec), axis=1)
 
     energy_baseline = np.full_like(energy, orbit_params.energy)
     h_baseline = np.full_like(h_mag, orbit_params.h_mag)

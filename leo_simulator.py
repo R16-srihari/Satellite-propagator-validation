@@ -17,6 +17,7 @@ from src.export_results import export_results
 from validation.compare_analytical import compare_analytical
 from validation.energy_check import energy_check
 from validation.plot_conservation import plot_conservation
+import pandas as pd
 
 
 class Tee:
@@ -178,15 +179,30 @@ def _run_simulation_core(output_dir: Path, log_file: Path, integrator: str) -> N
     print("=== SAVING RESULTS ===")
     export_results(t_adapt, y_adapt, orbit, output_dir)
 
+    # Load exported fixed-grid cartesian states and use them for validation
+    cartesian_file = output_dir / "orbit_cartesian.csv"
+    df_cart = pd.read_csv(cartesian_file)
+    t_export = df_cart["time_s"].to_numpy()
+    y_export = np.column_stack(
+        (
+            df_cart["x_m"].to_numpy(),
+            df_cart["y_m"].to_numpy(),
+            df_cart["z_m"].to_numpy(),
+            df_cart["vx_ms"].to_numpy(),
+            df_cart["vy_ms"].to_numpy(),
+            df_cart["vz_ms"].to_numpy(),
+        )
+    )
+
     print("=== VALIDATION ===")
     print("\nEnergy Conservation Test:")
-    energy_check(t_adapt, y_adapt, orbit, output_dir)
+    energy_check(t_export, y_export, orbit, output_dir)
 
     print("\nAnalytical Comparison Test:")
-    compare_analytical(t_adapt, y_adapt, orbit, output_dir)
+    compare_analytical(t_export, y_export, orbit, output_dir)
 
     print("\nConservation Plots:")
-    plot_conservation(t_adapt, y_adapt, orbit, output_dir)
+    plot_conservation(t_export, y_export, orbit, output_dir)
 
     print("\n===== SIMULATION COMPLETED SUCCESSFULLY =====\n")
     print(f"Terminal log saved to: {log_file}")
