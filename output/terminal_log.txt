@@ -1,3 +1,3 @@
 This run writes logs under integrator-specific folders.
-Latest run integrator: rk78
-Latest run log: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\terminal_log.txt
+Latest run integrator: symplectic
+Latest run log: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\terminal_log.txt
