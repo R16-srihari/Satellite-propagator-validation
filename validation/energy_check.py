@@ -70,20 +70,33 @@ def energy_check(t_vector, y_matrix, orbit_params, output_dir):
         {
             "time_s": t_vector,
             "energy_Jkg": energy,
+            "dE_abs_Jkg": d_e_abs,
             "dE_rel": d_e_rel,
         }
     ).to_csv(energy_check_file, index=False)
     print(f"  Data saved to: {energy_check_file}")
     # Use exported angular momentum if present, otherwise compute from states
-    if angmom_file.exists():
+    try:
         df_h = pd.read_csv(angmom_file)
         print(f"  Using exported angular momentum from {angmom_file}")
-        h_vec = np.column_stack((df_h["hx"].to_numpy(), df_h["hy"].to_numpy(), df_h["hz"].to_numpy()))
-        h_mag = np.asarray(df_h["h_mag"], dtype=float)
+        try:
+            h_vec = np.column_stack((df_h["hx"].to_numpy(), df_h["hy"].to_numpy(), df_h["hz"].to_numpy()))
+        except KeyError:
+            h_vec = np.zeros((num_points, 3))
+            for k in range(num_points):
+                r_vec = y_matrix[k, 0:3]
+                v_vec = y_matrix[k, 3:6]
+                h_vec[k, :] = np.cross(r_vec, v_vec)
+        try:
+            h_mag = np.asarray(df_h["h_mag"], dtype=float)
+        except KeyError:
+            h_mag = np.linalg.norm(h_vec, axis=1)
         h_init = h_mag[0]
         d_h_abs = h_mag - h_init
         d_h_rel = d_h_abs / abs(h_init)
-    else:
+    except (FileNotFoundError, KeyError) as e:
+        print(f"  ERROR: Could not load exported angular momentum table: {e}")
+        print("  Falling back to computing angular momentum from state vectors.")
         h_vec = np.cross(y_matrix[:, 0:3], y_matrix[:, 3:6])
         h_mag = np.linalg.norm(h_vec, axis=1)
         h_init = h_mag[0]
