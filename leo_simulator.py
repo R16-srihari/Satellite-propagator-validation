@@ -153,13 +153,14 @@ def _run_simulation_core(output_dir: Path, log_file: Path, integrator: str) -> N
         "RelTol": 1e-12,
         "AbsTol": 1e-14,
         "MaxStep": 60.0,
-        "InternalStep": 0.2,
+        "InternalStep": 0.001,  # 1 ms internal step for RK78; ignored by symplectic integrator
     }
 
-    print("RelTol:                 1e-12")
-    print("AbsTol:                 1e-14")
-    print("MaxStep:                60 s")
-    print("InternalStep:           0.2 s")
+    print("RelTol:"                 f"                {options['RelTol']:.0e}")
+    print("AbsTol:"                 f"                {options['AbsTol']:.0e}")
+    print("MaxStep:"                 f"                {options['MaxStep']:.0f} s")
+    if integrator == "rk78":
+        print("InternalStep:"           f"                {options['InternalStep']:.0f} s")
     print(f"Output directory:       {output_dir}")
     print("=========================\n")
 
