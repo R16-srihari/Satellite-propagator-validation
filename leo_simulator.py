@@ -17,6 +17,7 @@ from src.export_results import export_results
 from validation.compare_analytical import compare_analytical
 from validation.energy_check import energy_check
 from validation.plot_conservation import plot_conservation
+import pandas as pd
 
 
 class Tee:
@@ -150,44 +151,58 @@ def _run_simulation_core(output_dir: Path, log_file: Path, integrator: str) -> N
     print(f"Output points:          {t_output.size}")
 
     options = {
-        "RelTol": 1e-12,
-        "AbsTol": 1e-14,
-        "MaxStep": 60.0,
-        "InternalStep": 0.001,  # 1 ms internal step for RK78; ignored by symplectic integrator
+        "RelTol": 1e-10,
+        "AbsTol": 1e-12,
+        "MaxStep": 120.0,
+        "InternalStep": 1e-3,
     }
 
     print("RelTol:"                 f"                {options['RelTol']:.0e}")
     print("AbsTol:"                 f"                {options['AbsTol']:.0e}")
-    print("MaxStep:"                 f"                {options['MaxStep']:.0f} s")
-    if integrator == "rk78":
-        print("InternalStep:"           f"                {options['InternalStep']:.0f} s")
+    print("MaxStep:"                f"                {options['MaxStep']:.0e} s")
+    print("InternalStep:"           f"                {options['InternalStep']:.1e} s")
     print(f"Output directory:       {output_dir}")
     print("=========================\n")
 
     print(f"=== RUNNING {integrator_name.upper()} ===")
     print("Integration in progress...\n")
 
-    t, y_output, stats = _run_selected_integrator(integrator, t_output, y0, options)
+    t_adapt, y_adapt, stats = _run_selected_integrator(integrator, t_output, y0, options)
 
     print("\n=== INTEGRATION COMPLETE ===")
     print(f"Solver steps:           {stats.accepted_steps}")
     print(f"Rejected steps:         {stats.rejected_steps}")
     print(f"Function evaluations:   {stats.function_evaluations}")
-    print(f"Output points:          {y_output.shape[0]}")
+    print(f"Output points:          {t_adapt.size}")
     print("===========================\n")
 
     print("=== SAVING RESULTS ===")
-    export_results(t, y_output, orbit, output_dir)
+    export_results(t_adapt, y_adapt, orbit, output_dir)
+
+    # Load exported fixed-grid cartesian states and use them for validation
+    cartesian_file = output_dir / "orbit_cartesian.csv"
+    df_cart = pd.read_csv(cartesian_file)
+    t_export = df_cart["time_s"].to_numpy()
+    y_export = np.column_stack(
+        (
+            df_cart["x_m"].to_numpy(),
+            df_cart["y_m"].to_numpy(),
+            df_cart["z_m"].to_numpy(),
+            df_cart["vx_ms"].to_numpy(),
+            df_cart["vy_ms"].to_numpy(),
+            df_cart["vz_ms"].to_numpy(),
+        )
+    )
 
     print("=== VALIDATION ===")
     print("\nEnergy Conservation Test:")
-    energy_check(t, y_output, orbit, output_dir)
+    energy_check(t_export, y_export, orbit, output_dir)
 
     print("\nAnalytical Comparison Test:")
-    compare_analytical(t, y_output, orbit, output_dir)
+    compare_analytical(t_export, y_export, orbit, output_dir)
 
     print("\nConservation Plots:")
-    plot_conservation(t, y_output, orbit, output_dir, num_samples=20)
+    plot_conservation(t_export, y_export, orbit, output_dir)
 
     print("\n===== SIMULATION COMPLETED SUCCESSFULLY =====\n")
     print(f"Terminal log saved to: {log_file}")

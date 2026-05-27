@@ -12,6 +12,30 @@ def compare_analytical(t_vector, y_matrix, orbit_params, output_dir):
     y_matrix = np.asarray(y_matrix, dtype=float)
     num_points = t_vector.size
 
+    # Prefer exported fixed-grid cartesian states if present
+    cartesian_file = Path(output_dir) / "orbit_cartesian.csv"
+    if cartesian_file.exists():
+        print(f"  Loading exported cartesian states from {cartesian_file}")
+        df = pd.read_csv(cartesian_file)
+        t_vector = np.asarray(df["time_s"], dtype=float).reshape(-1)
+        # Build full state (positions + velocities) if velocity columns exist
+        if all(c in df.columns for c in ("x_m", "y_m", "z_m", "vx_ms", "vy_ms", "vz_ms")):
+            y_matrix = np.column_stack(
+                (
+                    df["x_m"].to_numpy(),
+                    df["y_m"].to_numpy(),
+                    df["z_m"].to_numpy(),
+                    df["vx_ms"].to_numpy(),
+                    df["vy_ms"].to_numpy(),
+                    df["vz_ms"].to_numpy(),
+                )
+            )
+        else:
+            pos = np.column_stack((df["x_m"].to_numpy(), df["y_m"].to_numpy(), df["z_m"].to_numpy()))
+            vel = np.zeros((pos.shape[0], 3), dtype=float)
+            y_matrix = np.hstack((pos, vel))
+        num_points = t_vector.size
+
     nu_init = orbit_params.nu
 
     r_numerical = y_matrix[:, 0:3].copy()
