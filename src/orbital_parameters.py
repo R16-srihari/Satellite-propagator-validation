@@ -72,6 +72,19 @@ def _get_cartesian_state_from_opm(opm: dict) -> Optional[tuple[np.ndarray, np.nd
     ) * 1000.0
     return r_vec, v_vec
 
+def _get_keplerian_state_from_opm(opm: dict) -> Optional[tuple[float, float, float, float, float, float]]:
+    required_keys = ("SEMI_MAJOR_AXIS", "ECCENTRICITY", "INCLINATION", "RA_OF_ASC_NODE", "ARG_OF_PERICENTER", "TRUE_ANOMALY")
+    if not all(key in opm for key in required_keys):
+        return None
+
+    a = float(opm["SEMI_MAJOR_AXIS"]) * 1000.0
+    e = float(opm["ECCENTRICITY"])
+    inc = float(opm["INCLINATION"]) * constants().deg2rad
+    omega_big = float(opm["RA_OF_ASC_NODE"]) * constants().deg2rad
+    omega_small = float(opm["ARG_OF_PERICENTER"]) * constants().deg2rad
+    nu = float(opm["TRUE_ANOMALY"]) * constants().deg2rad
+    return a, e, inc, omega_big, omega_small, nu
+
 
 def read_opm_cartesian_state() -> Optional[tuple[np.ndarray, np.ndarray]]:
     opm_path = _resolve_opm_path()
@@ -80,9 +93,17 @@ def read_opm_cartesian_state() -> Optional[tuple[np.ndarray, np.ndarray]]:
 
     try:
         opm = _parse_opm(opm_path)
-        return _get_cartesian_state_from_opm(opm)
+        cart = _get_cartesian_state_from_opm(opm)
+        if cart is None:
+            raise RuntimeError(
+                f"OPM file found at {opm_path} but missing required cartesian fields: X, Y, Z, X_DOT, Y_DOT, Z_DOT"
+            )
+        return cart
     except Exception:
-        return None
+        # Re-raise RuntimeError to halt execution when caller explicitly requested
+        # cartesian state but the OPM is malformed. For other exceptions, wrap
+        # to provide context.
+        raise
 
 
 def _orbit_from_cartesian(r_vec: np.ndarray, v_vec: np.ndarray, const) -> OrbitParameters:
@@ -135,46 +156,32 @@ def orbital_parameters(verbose: bool = True) -> OrbitParameters:
     if opm_path.exists():
         try:
             opm = _parse_opm(opm_path)
-            cartesian_state = _get_cartesian_state_from_opm(opm)
-            if cartesian_state is not None:
-                orbit = _orbit_from_cartesian(*cartesian_state, const)
-                if verbose:
-                    print(f"Using OPM Cartesian state for initial orbit: {opm_path}")
-            else:
-                # OPM convention: SEMI_MAJOR_AXIS in km
-                if "SEMI_MAJOR_AXIS" in opm:
-                    a_km = float(opm["SEMI_MAJOR_AXIS"])
-                    a = a_km * 1000.0
-                    altitude = a - const.r_earth
-                if "ECCENTRICITY" in opm:
-                    e = float(opm["ECCENTRICITY"])
-                if "INCLINATION" in opm:
-                    inc = float(opm["INCLINATION"]) * const.deg2rad
-                if "RA_OF_ASC_NODE" in opm:
-                    omega_big = float(opm["RA_OF_ASC_NODE"]) * const.deg2rad
-                if "ARG_OF_PERICENTER" in opm:
-                    omega_small = float(opm["ARG_OF_PERICENTER"]) * const.deg2rad
-                if "TRUE_ANOMALY" in opm:
-                    nu = float(opm["TRUE_ANOMALY"]) * const.deg2rad
-                orbit = OrbitParameters(
-                    altitude=altitude,
-                    a=a,
-                    e=e,
-                    i=inc,
-                    omega_big=omega_big,
-                    omega_small=omega_small,
-                    nu=nu,
-                    n=math.sqrt(const.mu_earth / a**3),
-                    period=const.twopi / math.sqrt(const.mu_earth / a**3),
-                    period_min=(const.twopi / math.sqrt(const.mu_earth / a**3)) / 60.0,
-                    v_orbit=math.sqrt(const.mu_earth / a),
-                    energy=-const.mu_earth / (2.0 * a),
-                    h_mag=math.sqrt(const.mu_earth * a),
-                    num_orbits_24h=const.seconds_per_day / (const.twopi / math.sqrt(const.mu_earth / a**3)),
-                    epoch=epoch,
+            keplerian_state = _get_keplerian_state_from_opm(opm)
+            if keplerian_state is None:
+                # Requested keplerian state is missing — stop the run.
+                raise RuntimeError(
+                    f"OPM file found at {opm_path} but missing required keplerian fields: "
+                    "SEMI_MAJOR_AXIS, ECCENTRICITY, INCLINATION, RA_OF_ASC_NODE, ARG_OF_PERICENTER, TRUE_ANOMALY"
                 )
-                if verbose:
-                    print(f"Using OPM Keplerian fields for initial orbit: {opm_path}")
+
+            a, e, inc, omega_big, omega_small, nu = keplerian_state
+            altitude = a - const.r_earth
+            orbit = OrbitParameters(
+                altitude=altitude,
+                a=a,
+                e=e,
+                i=inc,
+                omega_big=omega_big,
+                omega_small=omega_small,
+                nu=nu,
+                n=math.sqrt(const.mu_earth / a**3),
+                period=const.twopi / math.sqrt(const.mu_earth / a**3),
+                period_min=(const.twopi / math.sqrt(const.mu_earth / a**3)) / 60.0,
+                v_orbit=math.sqrt(const.mu_earth / a),
+                energy=-const.mu_earth / (2.0 * a),
+                h_mag=math.sqrt(const.mu_earth * a),
+                num_orbits_24h=const.seconds_per_day / (const.twopi / math.sqrt(const.mu_earth / a**3)),
+            )
 
             if "EPOCH" in opm:
                 # OPM EPOCH expected in ISO format
@@ -203,6 +210,11 @@ def orbital_parameters(verbose: bool = True) -> OrbitParameters:
                     epoch=epoch,
                 )
         except Exception as exc:
+            # Re-raise runtime errors so the caller stops the run; otherwise
+            # print a friendly message and fall back to defaults only when
+            # the OPM file isn't present or another unexpected error occurs.
+            if isinstance(exc, RuntimeError):
+                raise
             if verbose:
                 print(f"Failed to parse {opm_path}: {exc}. Falling back to defaults.")
 
