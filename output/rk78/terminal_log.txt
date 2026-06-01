@@ -50,7 +50,8 @@ Output points:          15760247
 ===========================
 
 === SAVING RESULTS ===
-Enter export grid step in seconds [default value is 10]: Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_cartesian.csv
+Enter export grid step in seconds [default value is 10]: 
+Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_cartesian.csv
 Converting to Keplerian elements...
   Progress: 10.0%
   Progress: 20.0%
@@ -78,37 +79,31 @@ Semi-major axis variation (m): 3.71e+04
 
 === VALIDATION ===
 
-Energy Conservation Test:
-  Using exported energy from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_energy.csv
-  Initial energy:                 -2.918808176373732e+07 J/kg
-  Expected energy (analytical):   -2.918808176373731e+07 J/kg
-  Max absolute energy error:      1.594888e+05 J/kg
-  Max relative energy error:      5.464176e-03 (5.46e-01 %)
-  Mean relative energy error:     2.725882e-03 (2.73e-01 %)
-  Status: WARNING - Energy error exceeds acceptable tolerance
-  Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\energy_conservation.csv
-  Using exported angular momentum from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_angular_momentum.csv
-
-  Angular momentum (specific) conservation:
-  Initial |h|:                   5.216989958608781e+10 m^2/s
-  Max absolute |h| error:        1.419515e+08 m^2/s
-  Max relative |h| error:        2.720946e-03 (2.72e-01 %)
-  Mean relative |h| error:       1.359236e-03 (1.36e-01 %)
-  Status: WARNING - Angular momentum error exceeds acceptable tolerance
-  Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\angular_momentum_conservation.csv
 
 Analytical Comparison Test:
-  Loading exported cartesian states from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_cartesian.csv
-  Computing analytical solution...
-  Max position error:             1.079704e+07 m (1.581258e+00 rel)
-  Mean position error:            6.892329e+06 m (1.009401e+00 rel)
-  RMS position error:             7.610268e+06 m
-  Status: WARNING - Position error exceeds tolerance
+  Using exported cartesian states from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_cartesian.csv
+  Using exported energy from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_energy.csv
+  Using exported angular momentum from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_angular_momentum.csv
 
-  Orbital Period Verification:
-  Theoretical period:             5615.19 s (93.59 min)
-  Estimated period (from sim):    10.00 s (0.17 min)
-  Period error:                   99.8219 %
+  Position vector comparison:
+  Analytical position vector norm:  6.828137000000000e+06 m
+  Mean numerical position vector norm: 6.809597526654677e+06 m
+  Mean error norm:                8.947119e+05 m
+  Maximum error norm:             2.675906e+06 m
+  Mean rel error:                 1.310331e-01
+  Maximum rel error:              3.918941e-01
+  Energy analytical value:        -2.918808174176939e+07 J/kg
+  Energy mean numerical value:    -2.926764502758526e+07 J/kg
+  Energy mean abs error:          7.956329e+04 J/kg
+  Energy max abs error:           1.594888e+05 J/kg
+  Energy mean rel error:          2.725883e-03
+  Energy max rel error:           5.464177e-03
+  Angular momentum analytical value:        5.216989960572022e+10 m^2/s
+  Angular momentum mean numerical value:    5.209898839627544e+10 m^2/s
+  Angular momentum mean abs error:          7.091121e+07 m^2/s
+  Angular momentum max abs error:           1.419515e+08 m^2/s
+  Angular momentum mean rel error:          1.359236e-03
+  Angular momentum max rel error:           2.720946e-03
 
   Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\analytical_comparison.csv
 

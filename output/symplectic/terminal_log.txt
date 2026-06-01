@@ -3,10 +3,10 @@
 Integrator: Velocity Verlet (Symplectic)
 =====================================================
 
-Using OPM file for initial orbit: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\STK_input\Satellite1.opm
+Using OPM Cartesian state for initial orbit: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\STK_input\Satellite1.opm
 
 === LEO ORBIT PARAMETERS ===
-Altitude:                457.1 km
+Altitude:                450.0 km
 Semi-major axis:         6.828137e+06 m
 Eccentricity:            0.000000
 Inclination:             51.6 degrees
@@ -19,8 +19,9 @@ Epoch (UTC):             2026-05-18 06:30:00
 =============================
 
 === INITIAL CONDITIONS ===
+Initial state source: OPM Cartesian fields
 Position [m]:       [6.828137e+06, 0.000000e+00, 0.000000e+00]
-Velocity [m/s]:     [0.000000e+00, 4.745836e+03, -5.987755e+03]
+Velocity [m/s]:     [0.000000e+00, 4.745836e+03, 5.987755e+03]
 Initial radius:     6.828137e+06 m
 Initial velocity:   7.640430e+03 m/s
 Epoch (UTC):         2026-05-18 06:30:00
@@ -31,10 +32,10 @@ Simulation duration:    24 hours (86400 seconds)
 Output interval:        10 seconds
 Expected orbits:        15.39
 Output points:          8641
-RelTol:                 1e-12
-AbsTol:                 1e-14
-MaxStep:                60 s
-InternalStep:           0.2 s
+RelTol:                1e-10
+AbsTol:                1e-12
+MaxStep:                1e+02 s
+InternalStep:                1.0e-03 s
 Output directory:       C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic
 =========================
 
@@ -43,13 +44,14 @@ Integration in progress...
 
 
 === INTEGRATION COMPLETE ===
-Solver steps:           438018
+Solver steps:           86403461
 Rejected steps:         0
-Function evaluations:   876036
+Function evaluations:   172806922
 Output points:          8641
 ===========================
 
 === SAVING RESULTS ===
+Enter export grid step in seconds [default value is 10]: 
 Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\orbit_cartesian.csv
 Converting to Keplerian elements...
   Progress: 10.0%
@@ -65,40 +67,44 @@ Converting to Keplerian elements...
   Progress: 100.0%
 Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\orbit_elements.csv
 Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\orbit_energy.csv
+Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\orbit_angular_momentum.csv
 
 === EXPORT SUMMARY ===
 Total points exported: 8641
 Time span: 24.00 hours (15.39 orbits)
-Energy variation (%): min=-6.30e-12, max=8.82e-12, mean=3.81e-12
-Angular momentum variation (%): 7.55e-12
-Semi-major axis variation (m): 1.03e-06
+Energy variation (%): min=-1.67e-11, max=1.11e-10, mean=4.68e-11
+Angular momentum variation (%): 6.41e-11
+Semi-major axis variation (m): 8.75e-06
 ======================
 
 === VALIDATION ===
 
 Energy Conservation Test:
-  Initial energy:                 -2.918808174176939e+07 J/kg
-  Expected energy (analytical):   -2.918808174176939e+07 J/kg
-  Max absolute energy error:      2.574176e-06 J/kg
-  Max relative energy error:      8.819270e-14 (8.82e-12 %)
-  Mean relative energy error:     3.810351e-14 (3.81e-12 %)
+  Using exported energy from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\orbit_energy.csv
+  Initial energy:                 -2.918808176373732e+07 J/kg
+  Expected energy (analytical):   -2.918808176373731e+07 J/kg
+  Max absolute energy error:      3.253669e-05 J/kg
+  Max relative energy error:      1.114725e-12 (1.11e-10 %)
+  Mean relative energy error:     4.675218e-13 (4.68e-11 %)
   Status: EXCELLENT - Energy conserved to < 1e-9 relative error
   Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\energy_conservation.csv
+  Using exported angular momentum from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\orbit_angular_momentum.csv
 
   Angular momentum (specific) conservation:
-  Initial |h|:                   5.216989960572021e+10 m^2/s
-  Max absolute |h| error:        2.296448e-03 m^2/s
-  Max relative |h| error:        4.401863e-14 (4.40e-12 %)
-  Mean relative |h| error:       1.898786e-14 (1.90e-12 %)
+  Initial |h|:                   5.216989958608781e+10 m^2/s
+  Max absolute |h| error:        2.908325e-02 m^2/s
+  Max relative |h| error:        5.574719e-13 (5.57e-11 %)
+  Mean relative |h| error:       2.338880e-13 (2.34e-11 %)
   Status: EXCELLENT - Angular momentum conserved to < 1e-9 relative error
   Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\angular_momentum_conservation.csv
 
 Analytical Comparison Test:
+  Loading exported cartesian states from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\orbit_cartesian.csv
   Computing analytical solution...
-  Max position error:             1.090465e+01 m (1.597016e-06 rel)
-  Mean position error:            5.509389e+00 m (8.068657e-07 rel)
-  RMS position error:             6.360506e+00 m
-  Status: ACCEPTABLE - Position error < 100 meters
+  Max position error:             1.070233e+07 m (1.567387e+00 rel)
+  Mean position error:            6.836213e+06 m (1.001183e+00 rel)
+  RMS position error:             7.586767e+06 m
+  Status: WARNING - Position error exceeds tolerance
 
   Orbital Period Verification:
   Theoretical period:             5615.19 s (93.59 min)
@@ -107,6 +113,7 @@ Analytical Comparison Test:
   Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\analytical_comparison.csv
 
 Conservation Plots:
+  Using exported energy and angular momentum from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\orbit_energy.csv and C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\orbit_angular_momentum.csv
 Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\energy_vs_time.png
 Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\angular_momentum_vs_time.png
 
