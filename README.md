@@ -108,6 +108,18 @@ Bash:
 OWNER=<owner> REPO=Satellite-propagator-validation TAG=stk-latest ./scripts/update_release_asset.sh
 ```
 
+### 3.3 Notebook workflow
+
+The notebook demo lives in `notebooks/Propagation_Demo.ipynb` and is paired with `notebooks/Propagation_Demo.py` for Jupytext-based version control.
+
+To work with the notebook source file directly, install the dependencies first:
+
+```bash
+pip install -r requirements.txt
+```
+
+Then open the notebook in VS Code or sync the pair with Jupytext if you prefer editing the `.py` source as the canonical version.
+
 ---
 
 ## 4. Limitations and Scope
