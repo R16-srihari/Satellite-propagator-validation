@@ -14,13 +14,34 @@ def plot_conservation(t_vector, y_matrix, orbit_params, output_dir):
     energy_file = Path(output_dir) / "orbit_energy.csv"
     angmom_file = Path(output_dir) / "orbit_angular_momentum.csv"
     mu_earth = 3.986004418e14
-    if energy_file.exists() and angmom_file.exists():
+    if energy_file is not None and angmom_file is not None:
         df_e = pd.read_csv(energy_file)
         df_h = pd.read_csv(angmom_file)
         print(f"  Using exported energy and angular momentum from {energy_file} and {angmom_file}")
         t_vector = np.asarray(df_e["time_s"], dtype=float).reshape(-1)
-        energy = np.asarray(df_e["energy_Jkg"], dtype=float)
-        h_mag = np.asarray(df_h["h_mag"], dtype=float)
+        # Energy column name may vary; prefer `energy_Jkg` then `energy`.
+        if "energy_Jkg" in df_e.columns:
+            energy = np.asarray(df_e["energy_Jkg"], dtype=float)
+        elif "energy" in df_e.columns:
+            energy = np.asarray(df_e["energy"], dtype=float)
+        else:
+            # Fallback: pick the first non-time numeric column
+            cols = [c for c in df_e.columns if c != "time_s"]
+            energy = np.asarray(df_e[cols[0]], dtype=float)
+
+        # Angular momentum magnitude column expected as `h_mag`
+        if "h_mag" in df_h.columns:
+            h_mag = np.asarray(df_h["h_mag"], dtype=float)
+        else:
+            # Fallback: try to compute from components if present
+            if all(c in df_h.columns for c in ("hx", "hy", "hz")):
+                h_mag = np.sqrt(
+                    df_h["hx"].to_numpy() ** 2 + df_h["hy"].to_numpy() ** 2 + df_h["hz"].to_numpy() ** 2
+                )
+            else:
+                # Last resort: take first numeric column not `time_s`
+                cols = [c for c in df_h.columns if c != "time_s"]
+                h_mag = np.asarray(df_h[cols[0]], dtype=float)
     else:
         r_vec = y_matrix[:, 0:3]
         v_vec = y_matrix[:, 3:6]

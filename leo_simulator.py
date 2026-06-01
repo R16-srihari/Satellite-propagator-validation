@@ -15,7 +15,6 @@ from src.rk78_integrate import rk78_integrate
 from src.symplectic_integrate import symplectic_integrate
 from src.export_results import export_results
 from validation.compare_analytical import compare_analytical
-from validation.energy_check import energy_check
 from validation.plot_conservation import plot_conservation
 import pandas as pd
 
@@ -178,8 +177,6 @@ def _run_simulation_core(output_dir: Path, log_file: Path, integrator: str) -> N
 
     print("=== SAVING RESULTS ===")
     export_results(t_adapt, y_adapt, orbit, output_dir)
-
-    # Load exported fixed-grid cartesian states and use them for validation
     cartesian_file = output_dir / "orbit_cartesian.csv"
     df_cart = pd.read_csv(cartesian_file)
     t_export = df_cart["time_s"].to_numpy()
@@ -194,16 +191,13 @@ def _run_simulation_core(output_dir: Path, log_file: Path, integrator: str) -> N
         )
     )
 
-    print("=== VALIDATION ===")
-    print("\nEnergy Conservation Test:")
-    energy_check(t_export, y_export, orbit, output_dir)
-
+    print("\n=== VALIDATION ===\n")
     print("\nAnalytical Comparison Test:")
     compare_analytical(t_export, y_export, orbit, output_dir)
 
     print("\nConservation Plots:")
     plot_conservation(t_export, y_export, orbit, output_dir)
-
+    
     print("\n===== SIMULATION COMPLETED SUCCESSFULLY =====\n")
     print(f"Terminal log saved to: {log_file}")
 

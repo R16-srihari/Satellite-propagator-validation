@@ -46,7 +46,7 @@ def export_results(t_vector, y_matrix, orbit_params, output_dir):
     )
     cartesian_file = output_path / "orbit_cartesian.csv"
     cartesian_df.to_csv(cartesian_file, index=False)
-    print(f"Saved: {cartesian_file}")
+    print(f"\nSaved: {cartesian_file}")
 
     a_array = np.zeros(num_points)
     e_array = np.zeros(num_points)

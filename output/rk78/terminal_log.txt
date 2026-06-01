@@ -3,7 +3,6 @@
 Integrator: Custom RK7(8)
 =====================================================
 
-Using OPM Cartesian state for initial orbit: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\STK_input\Satellite1.opm
 
 === LEO ORBIT PARAMETERS ===
 Altitude:                450.0 km
@@ -75,6 +74,7 @@ Energy variation (%): min=-5.46e-01, max=0.00e+00, mean=2.73e-01
 Angular momentum variation (%): 2.72e-01
 Semi-major axis variation (m): 3.71e+04
 ======================
+
 
 === VALIDATION ===
 

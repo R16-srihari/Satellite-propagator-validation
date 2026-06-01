@@ -24,8 +24,8 @@ def eci_from_keplerian(
 
     rz_omega_big = np.array(
         [
-            [np.cos(-omega_big), -np.sin(-omega_big), 0.0],
-            [np.sin(-omega_big), np.cos(-omega_big), 0.0],
+            [np.cos(omega_big), -np.sin(omega_big), 0.0],
+            [np.sin(omega_big), np.cos(omega_big), 0.0],
             [0.0, 0.0, 1.0],
         ],
         dtype=float,
@@ -33,15 +33,15 @@ def eci_from_keplerian(
     rx_i = np.array(
         [
             [1.0, 0.0, 0.0],
-            [0.0, np.cos(-i), -np.sin(-i)],
-            [0.0, np.sin(-i), np.cos(-i)],
+            [0.0, np.cos(i), -np.sin(i)],
+            [0.0, np.sin(i), np.cos(i)],
         ],
         dtype=float,
     )
     rz_omega_small = np.array(
         [
-            [np.cos(-omega_small), -np.sin(-omega_small), 0.0],
-            [np.sin(-omega_small), np.cos(-omega_small), 0.0],
+            [np.cos(omega_small), -np.sin(omega_small), 0.0],
+            [np.sin(omega_small), np.cos(omega_small), 0.0],
             [0.0, 0.0, 1.0],
         ],
         dtype=float,
