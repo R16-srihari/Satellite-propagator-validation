@@ -88,10 +88,10 @@ Analytical Comparison Test:
   Position vector comparison:
   Analytical position vector norm:  6.828137000000000e+06 m
   Mean numerical position vector norm: 6.828136994895655e+06 m
-  Mean error norm:                6.836213e+06 m
-  Maximum error norm:             1.070233e+07 m
-  Mean rel error:                 1.001183e+00
-  Maximum rel error:              1.567387e+00
+  Mean error norm:                3.726240e-01 m
+  Maximum error norm:             7.386077e-01 m
+  Mean rel error:                 5.457184e-08
+  Maximum rel error:              1.081712e-07
   Energy analytical value:        -2.918808174176939e+07 J/kg
   Energy mean numerical value:    -2.918808176373739e+07 J/kg
   Energy mean abs error:          2.196800e-02 J/kg

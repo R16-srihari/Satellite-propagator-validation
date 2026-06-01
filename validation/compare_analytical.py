@@ -3,7 +3,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from src.eci_from_keplerian import eci_from_keplerian
+from src.analytical_solution import analytical_solution
+from src.constants import constants
 
 
 def _load_state_csv(csv_path: Path, required_columns: tuple[str, ...]) -> pd.DataFrame:
@@ -87,17 +88,18 @@ def compare_analytical(t_vector, y_matrix, orbit_params, output_dir):
     print(f"  Using exported energy from {energy_file}")
     print(f"  Using exported angular momentum from {angmom_file}")
 
-    nu_init = orbit_params.nu
+    mu_earth = constants().mu_earth
     r_analytical = np.zeros((num_points, 3), dtype=float)
     for k in range(num_points):
-        nu = nu_init + orbit_params.n * t_vector[k]
-        r_analytical[k, :], _ = eci_from_keplerian(
+        r_analytical[k, :], _ = analytical_solution(
+            t_vector[k],
             orbit_params.a,
             orbit_params.e,
             orbit_params.i,
             orbit_params.omega_big,
             orbit_params.omega_small,
-            nu,
+            orbit_params.nu,
+            mu_earth,
         )
 
     r_error_norm, r_relative_error, r_num_mag = _print_vector_stats("Position vector", r_analytical, r_numerical, "m")
@@ -139,6 +141,9 @@ def compare_analytical(t_vector, y_matrix, orbit_params, output_dir):
             "y_num_m": r_numerical[:, 1],
             "z_num_m": r_numerical[:, 2],
             "r_num_m": r_num_mag,
+            "x_ana_m": r_analytical[:, 0],
+            "y_ana_m": r_analytical[:, 1],
+            "z_ana_m": r_analytical[:, 2],
             "r_ana_m": r_ana_mag,
             "r_error_norm_m": r_error_norm,
             "r_error_rel": r_relative_error,
