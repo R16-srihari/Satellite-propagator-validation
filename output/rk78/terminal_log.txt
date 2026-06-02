@@ -92,12 +92,24 @@ Analytical Comparison Test:
   Maximum error norm:             7.386077e-01 m
   Mean rel error:                 5.457184e-08
   Maximum rel error:              1.081712e-07
+
+  Velocity vector comparison:
+  Analytical velocity vector norm:  7.640429535277371e+03 m/s
+  Mean numerical velocity vector norm: 7.640429538113710e+03 m/s
+  Mean error norm:                4.169381e-04 m/s
+  Maximum error norm:             8.301968e-04 m/s
+  Mean rel error:                 5.456998e-08
+  Maximum rel error:              1.086584e-07
+
+  Energy comparison:
   Energy analytical value:        -2.918808174176939e+07 J/kg
   Energy mean numerical value:    -2.918808176373739e+07 J/kg
   Energy mean abs error:          2.196800e-02 J/kg
   Energy max abs error:           2.196838e-02 J/kg
   Energy mean rel error:          7.526360e-10
   Energy max rel error:           7.526490e-10
+
+  Angular momentum comparison:
   Angular momentum analytical value:        5.216989960572022e+10 m^2/s
   Angular momentum mean numerical value:    5.216989958608775e+10 m^2/s
   Angular momentum mean abs error:          1.963248e+01 m^2/s

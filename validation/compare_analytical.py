@@ -27,6 +27,7 @@ def _print_scalar_stats(label: str, analytical: np.ndarray, numerical: np.ndarra
         out=np.zeros_like(abs_error),
         where=np.abs(analytical) > 0,
     )
+    print(f"\n  {label} comparison:")
     print(f"  {label} analytical value:        {analytical[0]:.15e} {unit}")
     print(f"  {label} mean numerical value:    {np.mean(numerical):.15e} {unit}")
     print(f"  {label} mean abs error:          {np.mean(abs_error):.6e} {unit}")
@@ -70,7 +71,7 @@ def compare_analytical(t_vector, y_matrix, orbit_params, output_dir):
     energy_file = output_path / "orbit_energy.csv"
     angmom_file = output_path / "orbit_angular_momentum.csv"
 
-    df_cart = _load_state_csv(cartesian_file, ("time_s", "x_m", "y_m", "z_m"))
+    df_cart = _load_state_csv(cartesian_file, ("time_s", "x_m", "y_m", "z_m", "vx_ms", "vy_ms", "vz_ms"))
     df_energy = _load_state_csv(energy_file, ("time_s", "energy_Jkg"))
     df_h = _load_state_csv(angmom_file, ("time_s", "h_mag"))
 
@@ -79,6 +80,11 @@ def compare_analytical(t_vector, y_matrix, orbit_params, output_dir):
     y_num = np.asarray(df_cart["y_m"], dtype=float)
     z_num = np.asarray(df_cart["z_m"], dtype=float)
     r_numerical = np.column_stack((x_num, y_num, z_num))
+
+    vx_num = np.asarray(df_cart["vx_ms"], dtype=float)
+    vy_num = np.asarray(df_cart["vy_ms"], dtype=float)
+    vz_num = np.asarray(df_cart["vz_ms"], dtype=float)
+    v_numerical = np.column_stack((vx_num, vy_num, vz_num))
 
     num_points = t_vector.size
     if df_energy.shape[0] != num_points or df_h.shape[0] != num_points:
@@ -90,8 +96,9 @@ def compare_analytical(t_vector, y_matrix, orbit_params, output_dir):
 
     mu_earth = constants().mu_earth
     r_analytical = np.zeros((num_points, 3), dtype=float)
+    v_analytical = np.zeros((num_points, 3), dtype=float)
     for k in range(num_points):
-        r_analytical[k, :], _ = analytical_solution(
+        r_analytical[k, :], v_analytical[k, :] = analytical_solution(
             t_vector[k],
             orbit_params.a,
             orbit_params.e,
@@ -104,6 +111,9 @@ def compare_analytical(t_vector, y_matrix, orbit_params, output_dir):
 
     r_error_norm, r_relative_error, r_num_mag = _print_vector_stats("Position vector", r_analytical, r_numerical, "m")
     r_ana_mag = np.linalg.norm(r_analytical, axis=1)
+
+    v_error_norm, v_relative_error, v_num_mag = _print_vector_stats("Velocity vector", v_analytical, v_numerical, "m/s")
+    v_ana_mag = np.linalg.norm(v_analytical, axis=1)
 
     if "energy_Jkg" in df_energy.columns:
         energy = np.asarray(df_energy["energy_Jkg"], dtype=float)
@@ -147,6 +157,16 @@ def compare_analytical(t_vector, y_matrix, orbit_params, output_dir):
             "r_ana_m": r_ana_mag,
             "r_error_norm_m": r_error_norm,
             "r_error_rel": r_relative_error,
+            "vx_num_ms": v_numerical[:, 0],
+            "vy_num_ms": v_numerical[:, 1],
+            "vz_num_ms": v_numerical[:, 2],
+            "v_num_ms": v_num_mag,
+            "vx_ana_ms": v_analytical[:, 0],
+            "vy_ana_ms": v_analytical[:, 1],
+            "vz_ana_ms": v_analytical[:, 2],
+            "v_ana_ms": v_ana_mag,
+            "v_error_norm_ms": v_error_norm,
+            "v_error_rel": v_relative_error,
             "energy_error_Jkg": energy_error,
             "energy_error_rel": energy_relative_error,
             "h_error_m2s": h_error,
