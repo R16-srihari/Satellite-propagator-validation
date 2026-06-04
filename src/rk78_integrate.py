@@ -390,3 +390,4 @@ def rk78_integrate(
     )
 
     return t_eval, y_out, stats
+    return t_eval, y_out, stats
