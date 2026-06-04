@@ -226,7 +226,11 @@ def rk78_integrate(
     y0: np.ndarray,
     options: dict | None = None,
 ) -> tuple[np.ndarray, np.ndarray, RK78Stats]:
-    """Integrate to requested output times using a standalone adaptive Prince-Dormand RK7(8) stepper."""
+    """Integrate to requested output times using a standalone adaptive Prince-Dormand RK7(8) stepper.
+
+    Step size is clamped so the solver lands on (or exactly reaches) each requested
+    time in `t_eval` without overshooting beyond the next requested output time.
+    """
     if options is None:
         options = {}
 
@@ -256,9 +260,9 @@ def rk78_integrate(
     t_current = float(t_eval[0])
     t_final = float(t_eval[-1])
 
-    # Collect accepted-step history (adaptive, monotonic)
-    t_accepted = [t_current]
-    y_accepted = [y_current.copy()]
+    # Pre-allocate output aligned with t_eval
+    y_out = np.empty((t_eval.size, y_current.size), dtype=float)
+    y_out[0] = y_current
 
     f_current = _as_1d_float_array(fun(t_current, y_current))
     if f_current.size != y_current.size:
@@ -272,8 +276,8 @@ def rk78_integrate(
 
     stage_values = np.empty((RK78_C.size, y_current.size), dtype=float)
     y_work = np.empty_like(y_current)
-    needs_f_eval = False
 
+    needs_f_eval = False
     h_abs = _initial_step_size(
         y_current,
         f_current,
@@ -284,29 +288,44 @@ def rk78_integrate(
         None if requested_step is None else float(requested_step),
     )
 
-    while True:
+    output_index = 1
+    while output_index < t_eval.size:
+        remaining_to_final = t_final - t_current
+        if direction * remaining_to_final <= 0.0:
+            break
+
+        next_output_time = float(t_eval[output_index])
+
+        # Clamp by the next requested output time (and final time/max_step)
+        h_abs = min(
+            h_abs,
+            max_step,
+            abs(remaining_to_final),
+            abs(next_output_time - t_current),
+        )
+
+        if h_abs == 0.0:
+            # Already at the next requested time (within float resolution)
+            y_out[output_index] = y_current
+            output_index += 1
+            continue
+
+        h = direction * h_abs
+        t_new = t_current + h
+
+        # Final-time safety clamp
+        if direction * (t_new - t_final) > 0.0:
+            t_new = t_final
+            h = t_new - t_current
+            h_abs = abs(h)
+
+        # Ensure f_current is available
         if needs_f_eval:
             f_current = _as_1d_float_array(fun(t_current, y_current))
             if f_current.size != y_current.size:
                 raise ValueError("fun must return a derivative vector with the same size as y0.")
             function_evaluations += 1
             needs_f_eval = False
-
-        remaining = t_final - t_current
-        if direction * remaining <= 0.0:
-            break
-
-        # step size limited by remaining interval and max_step
-        h_abs = min(h_abs, max_step, abs(remaining))
-        if h_abs == 0.0:
-            break
-
-        h = direction * h_abs
-        t_new = t_current + h
-        if direction * (t_new - t_final) > 0.0:
-            t_new = t_final
-            h = t_new - t_current
-            h_abs = abs(h)
 
         y8, error_vec, stage_evaluations = _rk78_step(
             fun,
@@ -318,6 +337,7 @@ def rk78_integrate(
             y_work,
         )
         function_evaluations += stage_evaluations
+
         scale = np.full_like(y_current, abs_tol, dtype=float) + rel_tol * np.abs(y8)
         error_norm = _compute_error_norm(error_vec, scale)
         if np.isnan(first_attempt_error_norm):
@@ -328,14 +348,21 @@ def rk78_integrate(
             if np.isnan(first_accepted_step):
                 first_accepted_step = abs(h)
 
-            # accept step
+            # Accept step
             t_current = t_new
             y_current = y8
-            needs_f_eval = True
+            needs_f_eval = True  # will compute f at updated state for the next step
 
-            # append accepted endpoint to adaptive history
-            t_accepted.append(t_current)
-            y_accepted.append(y_current.copy())
+            # Fill all outputs reached (typically exactly one due to clamping)
+            while output_index < t_eval.size:
+                target_time = float(t_eval[output_index])
+                output_ready = (direction > 0.0 and target_time <= t_current) or (
+                    direction < 0.0 and target_time >= t_current
+                )
+                if not output_ready:
+                    break
+                y_out[output_index] = y_current
+                output_index += 1
 
             if error_norm == 0.0:
                 factor = MAX_FACTOR
@@ -349,8 +376,7 @@ def rk78_integrate(
             factor = SAFETY * error_norm ** (-1.0 / 8.0)
             h_abs = min(max_step, abs(h) * max(MIN_FACTOR, factor))
 
-    # Ensure we reached final time
-    if not np.isclose(t_current, t_final):
+    if output_index < t_eval.size:
         raise RuntimeError("RK78 integration failed to reach the final output time.")
 
     stats = RK78Stats(
@@ -363,7 +389,4 @@ def rk78_integrate(
         first_accepted_step=first_accepted_step,
     )
 
-    t_adapt = np.asarray(t_accepted, dtype=float)
-    y_adapt = np.asarray(y_accepted, dtype=float)
-
-    return t_adapt, y_adapt, stats
+    return t_eval, y_out, stats

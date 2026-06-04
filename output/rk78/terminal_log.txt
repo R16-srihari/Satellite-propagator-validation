@@ -43,10 +43,10 @@ Integration in progress...
 
 
 === INTEGRATION COMPLETE ===
-Solver steps:           15760246
-Rejected steps:         166
-Function evaluations:   204885191
-Output points:          15760247
+Solver steps:           15783606
+Rejected steps:         148
+Function evaluations:   205188654
+Output points:          8641
 ===========================
 
 === SAVING RESULTS ===
@@ -71,7 +71,7 @@ Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technolog
 === EXPORT SUMMARY ===
 Total points exported: 8641
 Time span: 24.00 hours (15.39 orbits)
-Energy variation (%): min=-5.46e-01, max=0.00e+00, mean=2.73e-01
+Energy variation (%): min=-5.46e-01, max=0.00e+00, mean=2.72e-01
 Angular momentum variation (%): 2.72e-01
 Semi-major axis variation (m): 3.71e+04
 ======================
@@ -87,23 +87,23 @@ Analytical Comparison Test:
 
   Position vector comparison:
   Analytical position vector norm:  6.828137000000000e+06 m
-  Mean numerical position vector norm: 6.809597526654677e+06 m
-  Mean error norm:                8.947119e+05 m
-  Maximum error norm:             2.675906e+06 m
-  Mean rel error:                 1.310331e-01
-  Maximum rel error:              3.918941e-01
+  Mean numerical position vector norm: 6.809612803071078e+06 m
+  Mean error norm:                8.939767e+05 m
+  Maximum error norm:             2.673726e+06 m
+  Mean rel error:                 1.309254e-01
+  Maximum rel error:              3.915748e-01
   Energy analytical value:        -2.918808174176939e+07 J/kg
-  Energy mean numerical value:    -2.926764502758526e+07 J/kg
-  Energy mean abs error:          7.956329e+04 J/kg
-  Energy max abs error:           1.594888e+05 J/kg
-  Energy mean rel error:          2.725883e-03
-  Energy max rel error:           5.464177e-03
+  Energy mean numerical value:    -2.926757923931502e+07 J/kg
+  Energy mean abs error:          7.949750e+04 J/kg
+  Energy max abs error:           1.593567e+05 J/kg
+  Energy mean rel error:          2.723629e-03
+  Energy max rel error:           5.459650e-03
   Angular momentum analytical value:        5.216989960572022e+10 m^2/s
-  Angular momentum mean numerical value:    5.209898839627544e+10 m^2/s
-  Angular momentum mean abs error:          7.091121e+07 m^2/s
-  Angular momentum max abs error:           1.419515e+08 m^2/s
-  Angular momentum mean rel error:          1.359236e-03
-  Angular momentum max rel error:           2.720946e-03
+  Angular momentum mean numerical value:    5.209904687134100e+10 m^2/s
+  Angular momentum mean abs error:          7.085273e+07 m^2/s
+  Angular momentum max abs error:           1.418344e+08 m^2/s
+  Angular momentum mean rel error:          1.358115e-03
+  Angular momentum max rel error:           2.718701e-03
 
   Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\analytical_comparison.csv
 
