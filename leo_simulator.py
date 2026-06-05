@@ -18,6 +18,66 @@ from validation.compare_analytical import compare_analytical
 from validation.plot_conservation import plot_conservation
 import pandas as pd
 
+from typing import TypedDict, Literal, Union
+
+
+IntegratorType = Literal["rk78", "symplectic"]
+
+
+class RK78Options(TypedDict, total=False):
+    RelTol: float
+    AbsTol: float
+    MaxStep: float
+    InternalStep: float
+
+
+class SymplecticOptions(TypedDict, total=False):
+    SymplecticStep: float
+    Mu: float
+    GaussLegendreTol: float
+    GaussLegendreMaxFEV: int
+    GaussLegendreXtol: float
+
+
+OptionsType = Union[RK78Options, SymplecticOptions]
+
+
+def _build_rk78_options() -> RK78Options:
+    return {
+        "RelTol": 1e-10,
+        "AbsTol": 1e-12,
+        "MaxStep": 120.0,
+        "InternalStep": 1e-3,
+    }
+
+
+def _build_symplectic_options() -> SymplecticOptions:
+    # symplectic_integrate uses SymplecticStep (with fallback to InternalStep/InitialStep)
+    return {"SymplecticStep": 1e-3}
+
+
+def _build_integrator_options(integrator: str) -> OptionsType:
+    if integrator == "rk78":
+        return _build_rk78_options()
+    if integrator == "symplectic":
+        return _build_symplectic_options()
+    raise ValueError(f"Unsupported integrator: {integrator!r}")
+
+
+def _print_integrator_options(integrator: str, options: OptionsType) -> None:
+    if integrator == "rk78":
+        print("RelTol:" f"                {options.get('RelTol', 1e-10):.0e}")
+        print("AbsTol:" f"                {options.get('AbsTol', 1e-12):.0e}")
+        print("MaxStep:" f"                {options.get('MaxStep', 120.0):.0e} s")
+        print(
+            "InternalStep:" f"                {options.get('InternalStep', 1e-3):.1e} s"
+        )
+        return
+
+    # symplectic
+    symp_step = float(options.get("SymplecticStep", 1e-3))
+    print("SymplecticStep:" f"        {symp_step:.1e} s")
+
 
 class Tee:
     """Write stdout to terminal and log file simultaneously."""
@@ -45,7 +105,7 @@ class Tee:
 
 INTEGRATOR_DISPLAY_NAMES = {
     "rk78": "Custom RK7(8)",
-    "symplectic": "Velocity Verlet (Symplectic)",
+    "symplectic": "Gauss-Legendre (Symplectic)",
 }
 
 
@@ -92,12 +152,18 @@ def _run_selected_integrator(
     integrator: str,
     t_output: np.ndarray,
     y0: np.ndarray,
-    options: dict,
+    options: OptionsType,
 ):
-    if integrator == "rk78":
-        return rk78_integrate(gravity_ode, t_output, y0, options)
+    # Integrator implementations expect `options: dict | None`.
+    # Cast here to keep type-checkers happy without changing runtime behavior.
+    options_dict: dict = dict(options)
 
-    return symplectic_integrate(gravity_ode, t_output, y0, options)
+    if integrator == "rk78":
+        return rk78_integrate(gravity_ode, t_output, y0, options_dict)
+    elif integrator == "symplectic":
+        return symplectic_integrate(gravity_ode, t_output, y0, options_dict)
+    else:
+        raise ValueError(f"Unsupported integrator: {integrator!r}")
 
 
 def _run_simulation_core(output_dir: Path, log_file: Path, integrator: str) -> None:
@@ -141,25 +207,25 @@ def _run_simulation_core(output_dir: Path, log_file: Path, integrator: str) -> N
     print("=== INTEGRATION SETUP ===")
 
     t_final = const.seconds_per_day
-    output_interval = 10.0
-    t_output = np.arange(0.0, t_final + output_interval, output_interval)
+    output_interval = input("Enter output grid step in seconds [default value is 10]: ").strip()
+    if output_interval:
+        time_step_s = float(output_interval)
+        if time_step_s <= 0:
+            raise ValueError("Output grid step must be positive")
+    else:
+        time_step_s = 10.0
+
+    t_output = np.arange(0.0, t_final + time_step_s * 0.5, time_step_s)
 
     print(f"Simulation duration:    24 hours ({t_final:.0f} seconds)")
-    print(f"Output interval:        {int(output_interval)} seconds")
+    print(f"Output interval:        {int(time_step_s)} seconds")
     print(f"Expected orbits:        {t_final / orbit.period:.2f}")
     print(f"Output points:          {t_output.size}")
 
-    options = {
-        "RelTol": 1e-10,
-        "AbsTol": 1e-12,
-        "MaxStep": 120.0,
-        "InternalStep": 1e-3,
-    }
+    options = _build_integrator_options(integrator)
 
-    print("RelTol:"                 f"                {options['RelTol']:.0e}")
-    print("AbsTol:"                 f"                {options['AbsTol']:.0e}")
-    print("MaxStep:"                f"                {options['MaxStep']:.0e} s")
-    print("InternalStep:"           f"                {options['InternalStep']:.1e} s")
+    _print_integrator_options(integrator, options)
+
     print(f"Output directory:       {output_dir}")
     print("=========================\n")
 
@@ -176,7 +242,7 @@ def _run_simulation_core(output_dir: Path, log_file: Path, integrator: str) -> N
     print("===========================\n")
 
     print("=== SAVING RESULTS ===")
-    export_results(t_adapt, y_adapt, orbit, output_dir)
+    export_results(t_adapt, y_adapt, orbit, output_dir,time_step_s)
     cartesian_file = output_dir / "orbit_cartesian.csv"
     df_cart = pd.read_csv(cartesian_file)
     t_export = df_cart["time_s"].to_numpy()

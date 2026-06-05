@@ -8,18 +8,11 @@ from src.constants import constants
 from src.keplerian_from_eci import keplerian_from_eci
 
 
-def export_results(t_vector, y_matrix, orbit_params, output_dir):
+def export_results(t_vector, y_matrix, orbit_params, output_dir,time_step_s):
     """Export propagated states, orbital elements, and conservation metrics to CSV."""
     const = constants()
 
-    step_text = input("Enter export grid step in seconds [default value is 10]: ").strip()
-    if step_text:
-        time_step_s = float(step_text)
-        if time_step_s <= 0:
-            raise ValueError("Export grid step must be positive")
-    else:
-        time_step_s = 10.0
-
+    
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 

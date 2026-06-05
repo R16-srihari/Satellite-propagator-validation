@@ -27,7 +27,7 @@ Epoch (UTC):         2026-05-18 06:30:00
 ==========================
 
 === INTEGRATION SETUP ===
-Simulation duration:    24 hours (86400 seconds)
+Enter output grid step in seconds [default value is 10]: Simulation duration:    24 hours (86400 seconds)
 Output interval:        10 seconds
 Expected orbits:        15.39
 Output points:          8641
@@ -50,7 +50,7 @@ Output points:          8641
 ===========================
 
 === SAVING RESULTS ===
-Enter export grid step in seconds [default value is 10]: 
+
 Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_cartesian.csv
 Converting to Keplerian elements...
   Progress: 10.0%
