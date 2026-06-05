@@ -3,7 +3,6 @@
 Integrator: Velocity Verlet (Symplectic)
 =====================================================
 
-Using OPM Cartesian state for initial orbit: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\STK_input\Satellite1.opm
 
 === LEO ORBIT PARAMETERS ===
 Altitude:                450.0 km
@@ -77,38 +76,34 @@ Angular momentum variation (%): 6.41e-11
 Semi-major axis variation (m): 8.75e-06
 ======================
 
+
 === VALIDATION ===
 
-Energy Conservation Test:
-  Using exported energy from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\orbit_energy.csv
-  Initial energy:                 -2.918808176373732e+07 J/kg
-  Expected energy (analytical):   -2.918808176373731e+07 J/kg
-  Max absolute energy error:      3.253669e-05 J/kg
-  Max relative energy error:      1.114725e-12 (1.11e-10 %)
-  Mean relative energy error:     4.675218e-13 (4.68e-11 %)
-  Status: EXCELLENT - Energy conserved to < 1e-9 relative error
-  Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\energy_conservation.csv
-  Using exported angular momentum from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\orbit_angular_momentum.csv
-
-  Angular momentum (specific) conservation:
-  Initial |h|:                   5.216989958608781e+10 m^2/s
-  Max absolute |h| error:        2.908325e-02 m^2/s
-  Max relative |h| error:        5.574719e-13 (5.57e-11 %)
-  Mean relative |h| error:       2.338880e-13 (2.34e-11 %)
-  Status: EXCELLENT - Angular momentum conserved to < 1e-9 relative error
-  Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\angular_momentum_conservation.csv
 
 Analytical Comparison Test:
-  Loading exported cartesian states from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\orbit_cartesian.csv
-  Computing analytical solution...
-  Max position error:             1.070233e+07 m (1.567387e+00 rel)
-  Mean position error:            6.836213e+06 m (1.001183e+00 rel)
-  RMS position error:             7.586767e+06 m
-  Status: WARNING - Position error exceeds tolerance
+  Using exported cartesian states from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\orbit_cartesian.csv
+  Using exported energy from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\orbit_energy.csv
+  Using exported angular momentum from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\orbit_angular_momentum.csv
 
-  Orbital Period Verification:
-  Theoretical period:             5615.19 s (93.59 min)
-  Note: Period estimation requires multiple orbit crossings
+  Position vector comparison:
+  Analytical position vector norm:  6.828137000000000e+06 m
+  Mean numerical position vector norm: 6.828136994900985e+06 m
+  Mean error norm:                6.310909e-01 m
+  Maximum error norm:             1.386015e+00 m
+  Mean rel error:                 9.242505e-08
+  Maximum rel error:              2.029858e-07
+  Energy analytical value:        -2.918808174176939e+07 J/kg
+  Energy mean numerical value:    -2.918808176372376e+07 J/kg
+  Energy mean abs error:          2.195437e-02 J/kg
+  Energy max abs error:           2.197281e-02 J/kg
+  Energy mean rel error:          7.521689e-10
+  Energy max rel error:           7.528008e-10
+  Angular momentum analytical value:        5.216989960572022e+10 m^2/s
+  Angular momentum mean numerical value:    5.216989958609993e+10 m^2/s
+  Angular momentum mean abs error:          1.962029e+01 m^2/s
+  Angular momentum max abs error:           1.963678e+01 m^2/s
+  Angular momentum mean rel error:          3.760845e-10
+  Angular momentum max rel error:           3.764006e-10
 
   Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\analytical_comparison.csv
 
