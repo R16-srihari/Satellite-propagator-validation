@@ -33,7 +33,6 @@ class RK78Options(TypedDict, total=False):
 
 class SymplecticOptions(TypedDict, total=False):
     SymplecticStep: float
-    Mu: float
     GaussLegendreTol: float
     GaussLegendreMaxFEV: int
     GaussLegendreXtol: float
@@ -44,16 +43,16 @@ OptionsType = Union[RK78Options, SymplecticOptions]
 
 def _build_rk78_options() -> RK78Options:
     return {
-        "RelTol": 1e-10,
-        "AbsTol": 1e-12,
-        "MaxStep": 120.0,
+        "RelTol": 1e-12,
+        "AbsTol": 1e-14,
+        "MaxStep": 60.0,
         "InternalStep": 1e-3,
     }
 
 
 def _build_symplectic_options() -> SymplecticOptions:
     # symplectic_integrate uses SymplecticStep (with fallback to InternalStep/InitialStep)
-    return {"SymplecticStep": 1e-3}
+    return {"SymplecticStep": 1, "GaussLegendreTol": 1e-12, "GaussLegendreMaxFEV": 200, "GaussLegendreXtol": 1e-14}
 
 
 def _build_integrator_options(integrator: str) -> OptionsType:

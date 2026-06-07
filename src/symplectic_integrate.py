@@ -6,8 +6,6 @@ from typing import Callable
 import numpy as np
 from scipy.optimize import root
 
-from src.constants import constants
-
 
 @dataclass
 class SymplecticStats:
@@ -23,21 +21,6 @@ class SymplecticStats:
 def _as_1d_float_array(values: np.ndarray) -> np.ndarray:
     return np.asarray(values, dtype=float).reshape(-1)
 
-
-def _acceleration(r_vec: np.ndarray, mu: float) -> np.ndarray:
-    r_mag = float(np.linalg.norm(r_vec))
-    if r_mag == 0.0:
-        raise ValueError("Position magnitude must be nonzero for gravitational acceleration.")
-    return -mu * r_vec / (r_mag**3)
-
-
-def _two_body_rhs(t: float, y: np.ndarray, mu: float) -> np.ndarray:
-    # State layout: y = [r(0:d), v(d:2d)]
-    d = y.size // 2
-    r = y[:d]
-    v = y[d:]
-    a = _acceleration(r, mu)
-    return np.concatenate((v, a))
 
 
 def _gauss_legendre_tableau(s: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -75,9 +58,8 @@ def symplectic_integrate(
     implicit Runge–Kutta method (symplectic RK for Kepler-like systems).
 
     Notes:
-    - This implementation is specialized to the two-body problem with state
-      layout [r, v] and uses an internal two-body RHS. The provided `fun`
-      parameter is accepted for API compatibility but not used.
+    - The provided `fun` parameter is used directly for the right-hand side
+      evaluations. For two-body dynamics, pass `src.gravity_ode.gravity_ode`.
     - Fixed internal step size comes from options:
       SymplecticStep / InternalStep / InitialStep.
     """
@@ -90,8 +72,6 @@ def symplectic_integrate(
     step_size = abs(float(requested_step))
     if step_size <= 0.0:
         raise ValueError("Symplectic step size must be positive.")
-
-    mu = float(options.get("Mu", constants().mu_earth))
 
     t_eval = np.asarray(t_eval, dtype=float).reshape(-1)
     if t_eval.size < 2:
@@ -130,7 +110,7 @@ def symplectic_integrate(
     def rhs_counted(t: float, y: np.ndarray) -> np.ndarray:
         nonlocal function_evaluations
         function_evaluations += 1
-        return _two_body_rhs(t, y, mu)
+        return fun(t, y)
 
     output_index = 1
     while output_index < t_eval.size:
@@ -162,12 +142,17 @@ def symplectic_integrate(
             solver_tol = float(options.get("GaussLegendreTol", 1e-10))
             maxfev = options.get("GaussLegendreMaxFEV", None)
             xtol = options.get("GaussLegendreXtol", None)
+
             root_kwargs: dict = {}
+            root_options: dict = {}
             if maxfev is not None:
-                root_kwargs["maxfev"] = int(maxfev)
+                root_options["maxfev"] = int(maxfev)
             if xtol is not None:
                 # SciPy's root(hybr) supports xtol
-                root_kwargs["options"] = {"xtol": float(xtol)}
+                root_options["xtol"] = float(xtol)
+
+            if root_options:
+                root_kwargs["options"] = root_options
 
             sol = root(residual, K_prev.ravel(), method="hybr", tol=solver_tol, **root_kwargs)
             if not sol.success:
@@ -175,7 +160,6 @@ def symplectic_integrate(
                 f_guess = rhs_counted(t_n, y_n)
                 K_guess = np.tile(f_guess, (s, 1))
                 sol = root(residual, K_guess.ravel(), method="hybr", tol=solver_tol, **root_kwargs)
-
 
             if not sol.success:
                 raise RuntimeError(
