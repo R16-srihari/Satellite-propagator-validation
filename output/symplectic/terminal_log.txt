@@ -118,8 +118,8 @@ Analytical Comparison Test:
 
 Conservation Plots:
   Using exported energy and angular momentum from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\orbit_energy.csv and C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\orbit_angular_momentum.csv
-Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\energy_vs_time.png
-Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\angular_momentum_vs_time.png
+Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\energy_error.png
+Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\angular_momentum_error.png
 
 ===== SIMULATION COMPLETED SUCCESSFULLY =====
 

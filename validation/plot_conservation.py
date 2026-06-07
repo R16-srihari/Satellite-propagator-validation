@@ -72,50 +72,39 @@ def plot_conservation(t_vector, y_matrix, orbit_params, output_dir):
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
+    # Only plot the error relative to analytical values (single-panel plots).
+    time_index = np.arange(len(time_hours))
+    tick_step = max(1, len(time_index) // 8)
+    tick_positions = time_index[::tick_step]
+    tick_labels = [f"{time_hours[int(i)]:.2f}h" for i in tick_positions]
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 8))
-
-    ax1.plot(time_hours, energy, linewidth=1.2, label="Numerical Energy")
-    ax1.plot(time_hours, energy_baseline, "--", linewidth=1.5, color="green", label="Analytical Baseline")
-    ax1.set_xlabel("Time (hours)")
-    ax1.set_ylabel("Specific Energy (J/kg)")
-    ax1.set_title("Energy Conservation vs Time")
-    ax1.grid(True, alpha=0.35)
-    ax1.legend(loc="best")
-
-    ax2.plot(time_hours, energy_error * 1e7, linewidth=1.2, color="darkblue", label="Error (×1e-7 J/kg)")
-    ax2.axhline(0, color="green", linestyle="--", linewidth=1.5, label="Zero")
-    ax2.set_xlabel("Time (hours)")
-    ax2.set_ylabel("Error (×1e-7 J/kg)")
-    ax2.set_title("Energy Error (Zoomed)")
-    ax2.grid(True, alpha=0.35)
-    ax2.legend(loc="best")
-
+    # Energy error plot
+    fig, ax = plt.subplots(figsize=(14, 6))
+    ax.plot(time_index, energy_error, linewidth=1.2, color="darkblue", label="Energy Error")
+    ax.axhline(0.0, color="green", linestyle="--", linewidth=1.5)
+    ax.set_xlabel("Sample index")
+    ax.set_ylabel("Specific Energy Error (J/kg)")
+    ax.set_title("Specific Orbital Energy Error")
+    ax.grid(True, alpha=0.35)
+    ax.set_xticks(tick_positions)
+    ax.set_xticklabels(tick_labels, rotation=45, ha="right")
     plt.tight_layout()
-    energy_plot_file = output_path / "energy_vs_time.png"
+    energy_plot_file = output_path / "energy_error.png"
     plt.savefig(energy_plot_file, dpi=180)
     plt.close()
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 8))
-
-    ax1.plot(time_hours, h_mag, linewidth=1.2, label="Numerical |h|")
-    ax1.plot(time_hours, h_baseline, "--", linewidth=1.5, color="green", label="Analytical Baseline")
-    ax1.set_xlabel("Time (hours)")
-    ax1.set_ylabel("Specific Angular Momentum (m^2/s)")
-    ax1.set_title("Angular Momentum Conservation vs Time")
-    ax1.grid(True, alpha=0.35)
-    ax1.legend(loc="best")
-
-    ax2.plot(time_hours, h_error * 1e4, linewidth=1.2, color="darkblue", label="Error (×1e-4 m^2/s)")
-    ax2.axhline(0, color="green", linestyle="--", linewidth=1.5, label="Zero")
-    ax2.set_xlabel("Time (hours)")
-    ax2.set_ylabel("Error (×1e-4 m^2/s)")
-    ax2.set_title("Angular Momentum Error (Zoomed)")
-    ax2.grid(True, alpha=0.35)
-    ax2.legend(loc="best")
-
+    # Angular momentum error plot
+    fig, ax = plt.subplots(figsize=(14, 6))
+    ax.plot(time_index, h_error, linewidth=1.2, color="darkblue", label="Angular Momentum Error")
+    ax.axhline(0.0, color="green", linestyle="--", linewidth=1.5)
+    ax.set_xlabel("Sample index")
+    ax.set_ylabel("Specific Angular Momentum Error (m^2/s)")
+    ax.set_title("Specific Angular Momentum Error")
+    ax.grid(True, alpha=0.35)
+    ax.set_xticks(tick_positions)
+    ax.set_xticklabels(tick_labels, rotation=45, ha="right")
     plt.tight_layout()
-    h_plot_file = output_path / "angular_momentum_vs_time.png"
+    h_plot_file = output_path / "angular_momentum_error.png"
     plt.savefig(h_plot_file, dpi=180)
     plt.close()
 

@@ -31,9 +31,9 @@ Enter output grid step in seconds [default value is 10]: Simulation duration:   
 Output interval:        10 seconds
 Expected orbits:        15.39
 Output points:          8641
-RelTol:                1e-10
-AbsTol:                1e-12
-MaxStep:                1e+02 s
+RelTol:                1e-12
+AbsTol:                1e-14
+MaxStep:                6e+01 s
 InternalStep:                1.0e-03 s
 Output directory:       C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78
 =========================
@@ -121,8 +121,8 @@ Analytical Comparison Test:
 
 Conservation Plots:
   Using exported energy and angular momentum from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_energy.csv and C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_angular_momentum.csv
-Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\energy_vs_time.png
-Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\angular_momentum_vs_time.png
+Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\energy_error.png
+Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\angular_momentum_error.png
 
 ===== SIMULATION COMPLETED SUCCESSFULLY =====
 
