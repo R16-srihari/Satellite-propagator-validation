@@ -25,48 +25,33 @@ def plot_conservation(t_vector, y_matrix, orbit_params, output_dir):
     energy_file = next((p for p in energy_candidates if p.exists()), None)
     angmom_file = next((p for p in angmom_candidates if p.exists()), None)
 
-    mu_earth = 3.986004418e14
     if energy_file is not None and angmom_file is not None:
+        # Read the energy and angular momentum files directly to get precomputed errors
         df_e = pd.read_csv(energy_file)
         df_h = pd.read_csv(angmom_file)
         print(f"  Using exported energy and angular momentum from {energy_file} and {angmom_file}")
+        
+        # Use the absolute error columns directly from the files
         t_vector = np.asarray(df_e["time_s"], dtype=float).reshape(-1)
-        # Energy column name may vary; prefer `energy_Jkg` then `energy`.
-        if "energy_Jkg" in df_e.columns:
-            energy = np.asarray(df_e["energy_Jkg"], dtype=float)
-        elif "energy" in df_e.columns:
-            energy = np.asarray(df_e["energy"], dtype=float)
-        else:
-            # Fallback: pick the first non-time numeric column
-            cols = [c for c in df_e.columns if c != "time_s"]
-            energy = np.asarray(df_e[cols[0]], dtype=float)
-
-        # Angular momentum magnitude column expected as `h_mag`
-        if "h_mag" in df_h.columns:
-            h_mag = np.asarray(df_h["h_mag"], dtype=float)
-        else:
-            # Fallback: try to compute from components if present
-            if all(c in df_h.columns for c in ("hx", "hy", "hz")):
-                h_mag = np.sqrt(
-                    df_h["hx"].to_numpy() ** 2 + df_h["hy"].to_numpy() ** 2 + df_h["hz"].to_numpy() ** 2
-                )
-            else:
-                # Last resort: take first numeric column not `time_s`
-                cols = [c for c in df_h.columns if c != "time_s"]
-                h_mag = np.asarray(df_h[cols[0]], dtype=float)
+        
+        # Energy error column is `dE_abs`
+        energy_error = np.asarray(df_e["dE_abs"], dtype=float)
+        
+        # Angular momentum error column is `dH_abs`
+        h_error = np.asarray(df_h["dH_abs"], dtype=float)
     else:
+        # Fallback to computing from state vectors if files are not found
+        mu_earth = 3.986004418e14
         r_vec = y_matrix[:, 0:3]
         v_vec = y_matrix[:, 3:6]
         r_mag = np.linalg.norm(r_vec, axis=1)
         v_mag = np.linalg.norm(v_vec, axis=1)
-        energy = v_mag**2 / 2.0 - mu_earth / r_mag
+        energy = 0.5 * v_mag**2 - mu_earth / r_mag
         h_mag = np.linalg.norm(np.cross(r_vec, v_vec), axis=1)
-
-    energy_baseline = np.full_like(energy, orbit_params.energy)
-    h_baseline = np.full_like(h_mag, orbit_params.h_mag)
-
-    energy_error = energy - orbit_params.energy
-    h_error = h_mag - orbit_params.h_mag
+        
+        # Calculate errors directly from the analytical values
+        energy_error = energy - orbit_params.energy
+        h_error = h_mag - orbit_params.h_mag
 
     time_hours = t_vector / 3600.0
 
