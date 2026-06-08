@@ -32,6 +32,9 @@ Output interval:        10 seconds
 Expected orbits:        15.39
 Output points:          8641
 SymplecticStep:        1.0e+00 s
+GaussLegendreTol:     1e-14
+GaussLegendreMaxFEV:  200
+GaussLegendreXtol:    1e-14
 Output directory:       C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic
 =========================
 

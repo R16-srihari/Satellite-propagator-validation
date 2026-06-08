@@ -38,6 +38,7 @@ import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import root
 import matplotlib.pyplot as plt
+from matplotlib.patches import Circle
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -61,7 +62,8 @@ def conic_xy(e, p=1.0, f_range=None):
         f_max = np.arccos(-1 / e) - 0.05
         f = np.linspace(-f_max, f_max, 600)
     if f_range is not None:
-        f = np.linspace(*f_range, 600)
+        f_start, f_end = f_range
+        f = np.linspace(f_start, f_end, 600)
     r = p / (1 + e * np.cos(f))
     x = r * np.cos(f)
     y = r * np.sin(f)
@@ -314,7 +316,7 @@ ax3.set_ylabel('y [km]', color=DIM, fontsize=9)
 ax3.plot(y_gl8[:, 0], y_gl8[:, 1], '-', color=COLS[0], lw=1.2, alpha=0.9, label='GL8 symplectic RK')
 ax3.plot(y_dop[:, 0], y_dop[:, 1], '--', color=COLS[2], lw=0.9, alpha=0.6, label='DOP853')
 
-earth = plt.Circle((0, 0), R_E, color='#1a6b3e', alpha=0.7, zorder=4)
+earth = Circle((0, 0), R_E, color='#1a6b3e', alpha=0.7, zorder=4)
 ax3.add_patch(earth)
 ax3.plot(0, 0, '+', color='white', ms=8, zorder=5)
 ax3.legend(fontsize=8, facecolor='#161b22', edgecolor='#30363d', labelcolor=FG)

@@ -52,7 +52,10 @@ def _build_rk78_options() -> RK78Options:
 
 def _build_symplectic_options() -> SymplecticOptions:
     # symplectic_integrate uses SymplecticStep (with fallback to InternalStep/InitialStep)
-    return {"SymplecticStep": 1, "GaussLegendreTol": 1e-12, "GaussLegendreMaxFEV": 200, "GaussLegendreXtol": 1e-14}
+    return {"SymplecticStep": 1,
+            "GaussLegendreTol": 1e-14,
+            "GaussLegendreMaxFEV": 200,
+            "GaussLegendreXtol": 1e-14}
 
 
 def _build_integrator_options(integrator: str) -> OptionsType:
@@ -76,6 +79,9 @@ def _print_integrator_options(integrator: str, options: OptionsType) -> None:
     # symplectic
     symp_step = float(options.get("SymplecticStep", 1e-3))
     print("SymplecticStep:" f"        {symp_step:.1e} s")
+    print("GaussLegendreTol:" f"     {options.get('GaussLegendreTol', 1e-14):.0e}")
+    print("GaussLegendreMaxFEV:" f"  {options.get('GaussLegendreMaxFEV', 200)}")
+    print("GaussLegendreXtol:" f"    {options.get('GaussLegendreXtol', 1e-14):.0e}")
 
 
 class Tee:
