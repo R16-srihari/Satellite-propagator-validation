@@ -71,7 +71,7 @@ Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technolog
 === EXPORT SUMMARY ===
 Total points exported: 8641
 Time span: 24.00 hours (15.39 orbits)
-Energy variation (%): min=-1.56e-12, max=7.27e-13, mean=4.81e-13
+Energy variation (%): min=-7.53e-08, max=-7.53e-08, mean=7.53e-08
 Angular momentum variation (%): 1.13e-12
 Semi-major axis variation (m): 1.56e-07
 ======================
@@ -104,18 +104,18 @@ Analytical Comparison Test:
   Energy comparison:
   Energy analytical value:        -2.918808174176939e+07 J/kg
   Energy mean numerical value:    -2.918808176373739e+07 J/kg
-  Energy mean abs error:          2.196800e-02 J/kg
-  Energy max abs error:           2.196838e-02 J/kg
-  Energy mean rel error:          7.526360e-10
-  Energy max rel error:           7.526490e-10
+  Energy mean abs error:          -2.196800e-02 J/kg
+  Energy max abs error:           -2.196771e-02 J/kg
+  Energy mean rel error:          -7.526360e-10
+  Energy max rel error:           -7.526261e-10
 
-  Angular momentum comparison:
-  Angular momentum analytical value:        5.216989960572022e+10 m^2/s
-  Angular momentum mean numerical value:    5.216989958608775e+10 m^2/s
-  Angular momentum mean abs error:          1.963248e+01 m^2/s
-  Angular momentum max abs error:           1.963281e+01 m^2/s
-  Angular momentum mean rel error:          3.763181e-10
-  Angular momentum max rel error:           3.763245e-10
+  Angular momentum magnitude comparison:
+  Angular momentum magnitude analytical value:        5.216989960572022e+10 m^2/s
+  Angular momentum magnitude mean numerical value:    5.216989958608775e+10 m^2/s
+  Angular momentum magnitude mean abs error:          -1.963248e+01 m^2/s
+  Angular momentum magnitude max abs error:           -1.963223e+01 m^2/s
+  Angular momentum magnitude mean rel error:          -3.763181e-10
+  Angular momentum magnitude max rel error:           -3.763133e-10
 
   Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\analytical_comparison.csv
 

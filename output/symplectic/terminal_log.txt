@@ -71,7 +71,7 @@ Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technolog
 === EXPORT SUMMARY ===
 Total points exported: 8641
 Time span: 24.00 hours (15.39 orbits)
-Energy variation (%): min=-1.40e-12, max=3.27e-12, mean=1.49e-12
+Energy variation (%): min=-7.53e-08, max=-7.53e-08, mean=7.53e-08
 Angular momentum variation (%): 2.31e-12
 Semi-major axis variation (m): 3.19e-07
 ======================
@@ -104,18 +104,18 @@ Analytical Comparison Test:
   Energy comparison:
   Energy analytical value:        -2.918808174176939e+07 J/kg
   Energy mean numerical value:    -2.918808176373693e+07 J/kg
-  Energy mean abs error:          2.196754e-02 J/kg
-  Energy max abs error:           2.196833e-02 J/kg
-  Energy mean rel error:          7.526203e-10
-  Energy max rel error:           7.526474e-10
+  Energy mean abs error:          -2.196754e-02 J/kg
+  Energy max abs error:           -2.196697e-02 J/kg
+  Energy mean rel error:          -7.526203e-10
+  Energy max rel error:           -7.526007e-10
 
-  Angular momentum comparison:
-  Angular momentum analytical value:        5.216989960572022e+10 m^2/s
-  Angular momentum mean numerical value:    5.216989958608816e+10 m^2/s
-  Angular momentum mean abs error:          1.963207e+01 m^2/s
-  Angular momentum max abs error:           1.963277e+01 m^2/s
-  Angular momentum mean rel error:          3.763102e-10
-  Angular momentum max rel error:           3.763238e-10
+  Angular momentum magnitude comparison:
+  Angular momentum magnitude analytical value:        5.216989960572022e+10 m^2/s
+  Angular momentum magnitude mean numerical value:    5.216989958608816e+10 m^2/s
+  Angular momentum magnitude mean abs error:          -1.963207e+01 m^2/s
+  Angular momentum magnitude max abs error:           -1.963157e+01 m^2/s
+  Angular momentum magnitude mean rel error:          -3.763102e-10
+  Angular momentum magnitude max rel error:           -3.763007e-10
 
   Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\analytical_comparison.csv
 
