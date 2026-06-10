@@ -106,37 +106,6 @@ def read_opm_cartesian_state() -> Optional[tuple[np.ndarray, np.ndarray]]:
         raise
 
 
-def _orbit_from_cartesian(r_vec: np.ndarray, v_vec: np.ndarray, const) -> OrbitParameters:
-    a, e, inc, omega_big, omega_small, nu = keplerian_from_eci(r_vec, v_vec)
-
-    r = float(np.linalg.norm(r_vec))
-    v = float(np.linalg.norm(v_vec))
-    altitude = r - const.r_earth
-    energy = 0.5 * v**2 - const.mu_earth / r
-    h_mag = float(np.linalg.norm(np.cross(r_vec, v_vec)))
-    n = math.sqrt(const.mu_earth / a**3)
-    period = const.twopi / n
-    period_min = period / 60.0
-    v_orbit = v
-    num_orbits_24h = const.seconds_per_day / period
-
-    return OrbitParameters(
-        altitude=altitude,
-        a=float(a),
-        e=float(e),
-        i=float(inc),
-        omega_big=float(omega_big),
-        omega_small=float(omega_small),
-        nu=float(nu),
-        n=n,
-        period=period,
-        period_min=period_min,
-        v_orbit=v_orbit,
-        energy=energy,
-        h_mag=h_mag,
-        num_orbits_24h=num_orbits_24h,
-    )
-
 
 def orbital_parameters(verbose: bool = True) -> OrbitParameters:
     const = constants()

@@ -96,7 +96,7 @@ def export_results(t_vector, y_matrix, orbit_params, output_dir,time_step_s):
         h_vec[k, :] = np.cross(r_vec, v_vec)
         h_mag_array[k] = np.linalg.norm(h_vec[k, :]) # Specific angular momentum magnitude (m^2/s)
 
-    e_ref = orbit_params.energy
+    e_ref = energy_array[0]
     d_e_abs = energy_array - e_ref
     d_e_rel = (energy_array - e_ref) / abs(e_ref)
 
@@ -113,7 +113,7 @@ def export_results(t_vector, y_matrix, orbit_params, output_dir,time_step_s):
     print(f"Saved: {energy_file}")
 
     # Save angular momentum time series (vector + magnitude + relative change)
-    h_ref = orbit_params.h_mag
+    h_ref = h_mag_array[0]
     d_h_abs = h_mag_array - h_ref
     d_h_rel = d_h_abs / abs(h_ref)
 

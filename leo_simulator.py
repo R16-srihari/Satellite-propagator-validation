@@ -53,9 +53,15 @@ def _build_rk78_options() -> RK78Options:
 def _build_symplectic_options() -> SymplecticOptions:
     # symplectic_integrate uses SymplecticStep (with fallback to InternalStep/InitialStep)
     return {"SymplecticStep": 1,
-            "GaussLegendreTol": 1e-14,
-            "GaussLegendreMaxFEV": 200,
-            "GaussLegendreXtol": 1e-14}
+            "GaussLegendreTol": 1e-14, # This is the tolerance for the internal Gauss-Legendre solver 
+                                    # used by the symplectic integrator to solve implicit equations at 
+                                    # each step. It controls the accuracy of the symplectic method's 
+                                    # internal computations, but not the overall step size control 
+                                    # (which is governed by SymplecticStep).
+            "GaussLegendreMaxFEV": 200, # Maximum function evaluations for the internal Gauss-Legendre solver. 
+                                        # This prevents infinite loops in case of convergence issues.
+            "GaussLegendreXtol": 1e-14 # Tolerance for changes in the solution vector during the internal Gauss-Legendre iterations.
+            } 
 
 
 def _build_integrator_options(integrator: str) -> OptionsType:
@@ -70,7 +76,7 @@ def _print_integrator_options(integrator: str, options: OptionsType) -> None:
     if integrator == "rk78":
         print("RelTol:" f"                {options.get('RelTol', 1e-10):.0e}")
         print("AbsTol:" f"                {options.get('AbsTol', 1e-12):.0e}")
-        print("MaxStep:" f"                {options.get('MaxStep', 120.0):.0e} s")
+        print("MaxStep:" f"                {options.get('MaxStep', 120.0):.0f} s")
         print(
             "InternalStep:" f"                {options.get('InternalStep', 1e-3):.1e} s"
         )
