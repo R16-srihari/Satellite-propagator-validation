@@ -167,6 +167,21 @@ def save_errors_to_csv(
         writer.writerow(["Time (UTCG)", "Delaunay_G_error (m^2/sec)", "Specific_Orbital_Energy_error (m^2/s^2)"])
         for time, he, ee in zip(times, h_error, e_error):
             writer.writerow([time, f"{he:.12e}", f"{ee:.12e}"])
+            
+
+def _print_scalar_stats(label: str, analytical: np.ndarray, numerical: np.ndarray,err_abs:np.ndarray,err_rel:np.ndarray, unit: str) -> None:
+    
+    def max_abs(arr):
+        return np.max(np.abs(arr))
+    def mean_abs(arr):
+        return np.mean(np.abs(arr))
+    print(f"\n  {label} comparison:")
+    print(f"  {label} analytical value:        {analytical[0]:.15e} {unit}")
+    print(f"  {label} mean numerical value:    {np.mean(numerical):.15e} {unit}")
+    print(f"  {label} mean abs error:          {mean_abs(err_abs):.6e} {unit}")
+    print(f"  {label} max abs error:           {max_abs(err_abs):.6e} {unit}")
+    print(f"  {label} mean rel error:          {mean_abs(err_rel):.6e}")
+    print(f"  {label} max rel error:           {max_abs(err_rel):.6e}")
 
 
 def plot_angular_momentum_error(
@@ -189,7 +204,7 @@ def plot_angular_momentum_error(
     fig, ax = plt.subplots(figsize=(14, 6))
     ax.plot(time_index, h_error, color="tab:blue", linewidth=1.5)
     ax.axhline(0.0, color="black", linewidth=1.0, linestyle="--")
-    ax.set_ylabel("h - mean(h) [m^2/s]", fontsize=12)
+    ax.set_ylabel("h - h_0 [m^2/s]", fontsize=12)
     ax.set_title("Specific Angular Momentum Error", fontsize=14, fontweight="bold")
     ax.grid(True, alpha=0.3)
     ax.set_xlabel("Sample index", fontsize=12)
@@ -227,7 +242,7 @@ def plot_energy_error(
     fig, ax = plt.subplots(figsize=(14, 6))
     ax.plot(time_index, e_error, color="tab:orange", linewidth=1.5)
     ax.axhline(0.0, color="black", linewidth=1.0, linestyle="--")
-    ax.set_ylabel("epsilon - mean(epsilon) [m^2/s^2]", fontsize=12)
+    ax.set_ylabel("epsilon - epsilon[0] [m^2/s^2]", fontsize=12)
     ax.set_title("Specific Orbital Energy Error", fontsize=14, fontweight="bold")
     ax.grid(True, alpha=0.3)
     ax.set_xlabel("Sample index", fontsize=12)
@@ -311,32 +326,17 @@ def main():
     # If an OPM is provided and exists, compute analytical reference h and energy
     reference_h = None
     reference_e = None
-    try:
-        if args.opm and args.opm.exists():
-            opm = parse_opm(args.opm)
-            print(f"Using OPM file for analytical reference: {args.opm.resolve()}")
-            # OPM values are typically in km and km^3/s^2 for GM. Convert to meters.
-            a0_km = float(opm["a"])  # km
-            e0 = float(opm["e"])  # unitless
-            gm_km = opm.get("gm")
-            if gm_km is not None:
-                gm_km = float(gm_km)
-            # convert to meters / m^3/s^2
-            a0 = a0_km * 1000.0  # meters
-            gm = (gm_km * 1e9) if gm_km is not None else MU_EARTH
-            # specific angular momentum magnitude for Keplerian orbit: h = sqrt(mu * a * (1 - e^2))
-            reference_h = float(np.sqrt(gm * a0 * (1.0 - e0**2)))
-            reference_e = -float(gm / (2.0 * a0))
-    except Exception as exc:  # keep running even if OPM parse fails
-        print(f"Warning: failed to parse OPM {args.opm}: {exc}")
-
+    
     # Compute error time series against the chosen references (analytical or mean)
-    h_ref_for_errors = reference_h if reference_h is not None else float(np.mean(angular_momentum))
-    e_ref_for_errors = reference_e if reference_e is not None else float(np.mean(energy))
+    h_ref_for_errors = reference_h if reference_h is not None else float( angular_momentum[0])
+    e_ref_for_errors = reference_e if reference_e is not None else float(energy[0])
 
     h_error_series = angular_momentum - float(h_ref_for_errors)
     e_error_series = energy - float(e_ref_for_errors)
 
+    _print_scalar_stats("Specific Angular Momentum", np.array([h_ref_for_errors]), angular_momentum, h_error_series, np.divide(h_error_series, h_ref_for_errors, out=np.zeros_like(h_error_series), where=h_ref_for_errors!=0), "m^2/s")
+    _print_scalar_stats("Specific Orbital Energy", np.array([e_ref_for_errors]), energy, e_error_series, np.divide(e_error_series, e_ref_for_errors, out=np.zeros_like(e_error_series), where=e_ref_for_errors!=0), "m^2/s^2")
+    
     errors_csv = OUTPUT_DIR / "STK_errors.csv"
     save_errors_to_csv(times, h_error_series, e_error_series, errors_csv)
 

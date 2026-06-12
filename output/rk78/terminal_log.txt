@@ -104,18 +104,18 @@ Analytical Comparison Test:
   Energy comparison:
   Energy analytical value:        -2.918808174176939e+07 J/kg
   Energy mean numerical value:    -2.918808176373739e+07 J/kg
-  Energy mean abs error:          -7.649542e-08 J/kg
-  Energy max abs error:           2.123415e-07 J/kg
-  Energy mean rel error:          -2.620776e-15
-  Energy max rel error:           7.274940e-15
+  Energy mean abs error:          1.404785e-07 J/kg
+  Energy max abs error:           4.544854e-07 J/kg
+  Energy mean rel error:          4.812872e-15
+  Energy max rel error:           1.557092e-14
 
   Angular momentum magnitude comparison:
   Angular momentum magnitude analytical value:        5.216989960572022e+10 m^2/s
   Angular momentum magnitude mean numerical value:    5.216989958608775e+10 m^2/s
-  Angular momentum magnitude mean abs error:          -6.935765e-05 m^2/s
-  Angular momentum magnitude max abs error:           1.831055e-04 m^2/s
-  Angular momentum magnitude mean rel error:          -1.329457e-15
-  Angular momentum magnitude max rel error:           3.509791e-15
+  Angular momentum magnitude mean abs error:          1.253213e-04 m^2/s
+  Angular momentum magnitude max abs error:           4.043579e-04 m^2/s
+  Angular momentum magnitude mean rel error:          2.402176e-15
+  Angular momentum magnitude max rel error:           7.750790e-15
 
   Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\analytical_comparison.csv
 

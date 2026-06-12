@@ -17,16 +17,19 @@ def _load_state_csv(csv_path: Path, required_columns: tuple[str, ...]) -> pd.Dat
         raise KeyError(f"{csv_path} is missing required columns: {', '.join(missing)}")
     return df
 
-
 def _print_scalar_stats(label: str, analytical: np.ndarray, numerical: np.ndarray,err_abs:np.ndarray,err_rel:np.ndarray, unit: str) -> None:
     
+    def max_abs(arr):
+        return np.max(np.abs(arr))
+    def mean_abs(arr):
+        return np.mean(np.abs(arr))
     print(f"\n  {label} comparison:")
     print(f"  {label} analytical value:        {analytical[0]:.15e} {unit}")
     print(f"  {label} mean numerical value:    {np.mean(numerical):.15e} {unit}")
-    print(f"  {label} mean abs error:          {np.mean(err_abs):.6e} {unit}")
-    print(f"  {label} max abs error:           {np.max(err_abs):.6e} {unit}")
-    print(f"  {label} mean rel error:          {np.mean(err_rel):.6e}")
-    print(f"  {label} max rel error:           {np.max(err_rel):.6e}")
+    print(f"  {label} mean abs error:          {mean_abs(err_abs):.6e} {unit}")
+    print(f"  {label} max abs error:           {max_abs(err_abs):.6e} {unit}")
+    print(f"  {label} mean rel error:          {mean_abs(err_rel):.6e}")
+    print(f"  {label} max rel error:           {max_abs(err_rel):.6e}")
 
 
 def _print_vector_stats(label: str, analytical: np.ndarray, numerical: np.ndarray, unit: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
