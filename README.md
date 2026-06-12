@@ -27,8 +27,6 @@ Initialization behavior in the current `main` branch:
 
 ```text
 Satellite-propagator-validation/
-├── .gitignore
-├── .vscode/
 ├── leo_simulator.py
 ├── STK_output_energy_angular_momentum_errors.py
 ├── requirements.txt
