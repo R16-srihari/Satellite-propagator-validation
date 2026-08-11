@@ -1,13 +1,11 @@
-from dataclasses import dataclass
 import math
-from pathlib import Path
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
+from pathlib import Path
 
 import numpy as np
 
 from src.constants import constants
-from src.keplerian_from_eci import keplerian_from_eci
 
 
 @dataclass(frozen=True)
@@ -26,7 +24,7 @@ class OrbitParameters:
     energy: float
     h_mag: float
     num_orbits_24h: float
-    epoch: Optional[datetime] = None
+    epoch: datetime | None = None
 
 
 def _parse_opm(path: Path) -> dict:
@@ -60,7 +58,7 @@ def _resolve_opm_path() -> Path:
     return opm_path
 
 
-def _get_cartesian_state_from_opm(opm: dict) -> Optional[tuple[np.ndarray, np.ndarray]]:
+def _get_cartesian_state_from_opm(opm: dict) -> tuple[np.ndarray, np.ndarray] | None:
     required_keys = ("X", "Y", "Z", "X_DOT", "Y_DOT", "Z_DOT")
     if not all(key in opm for key in required_keys):
         return None
@@ -72,7 +70,7 @@ def _get_cartesian_state_from_opm(opm: dict) -> Optional[tuple[np.ndarray, np.nd
     ) * 1000.0
     return r_vec, v_vec
 
-def _get_keplerian_state_from_opm(opm: dict) -> Optional[tuple[float, float, float, float, float, float]]:
+def _get_keplerian_state_from_opm(opm: dict) -> tuple[float, float, float, float, float, float] | None:
     required_keys = ("SEMI_MAJOR_AXIS", "ECCENTRICITY", "INCLINATION", "RA_OF_ASC_NODE", "ARG_OF_PERICENTER", "TRUE_ANOMALY")
     if not all(key in opm for key in required_keys):
         return None
@@ -86,7 +84,7 @@ def _get_keplerian_state_from_opm(opm: dict) -> Optional[tuple[float, float, flo
     return a, e, inc, omega_big, omega_small, nu
 
 
-def read_opm_cartesian_state() -> Optional[tuple[np.ndarray, np.ndarray]]:
+def read_opm_cartesian_state() -> tuple[np.ndarray, np.ndarray] | None:
     opm_path = _resolve_opm_path()
     if not opm_path.exists():
         return None
@@ -99,7 +97,7 @@ def read_opm_cartesian_state() -> Optional[tuple[np.ndarray, np.ndarray]]:
                 f"OPM file found at {opm_path} but missing required cartesian fields: X, Y, Z, X_DOT, Y_DOT, Z_DOT"
             )
         return cart
-    except Exception:
+    except Exception:  # noqa: TRY203
         # Re-raise RuntimeError to halt execution when caller explicitly requested
         # cartesian state but the OPM is malformed. For other exceptions, wrap
         # to provide context.
@@ -109,7 +107,7 @@ def read_opm_cartesian_state() -> Optional[tuple[np.ndarray, np.ndarray]]:
 
 def orbital_parameters(verbose: bool = True) -> OrbitParameters:
     const = constants()
-    orbit: Optional[OrbitParameters] = None
+    orbit: OrbitParameters | None = None
 
     # Default values (meters, radians)
     altitude = 450e3
@@ -119,7 +117,7 @@ def orbital_parameters(verbose: bool = True) -> OrbitParameters:
     omega_big = 0.0
     omega_small = 0.0
     nu = 0.0
-    epoch: Optional[datetime] = None
+    epoch: datetime | None = None
 
     opm_path = _resolve_opm_path()
     if opm_path.exists():
@@ -156,7 +154,7 @@ def orbital_parameters(verbose: bool = True) -> OrbitParameters:
                 # OPM EPOCH expected in ISO format
                 try:
                     epoch = datetime.fromisoformat(opm["EPOCH"])  # type: ignore[arg-type]
-                except Exception:
+                except Exception:  # noqa: BLE001
                     # Try alternative parsing
                     epoch = datetime.strptime(opm["EPOCH"], "%Y-%m-%dT%H:%M:%S.%f")
 

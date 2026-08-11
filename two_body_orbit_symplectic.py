@@ -31,14 +31,16 @@ Output:
 """
 
 import matplotlib
+
 matplotlib.use("Agg")
 
 import os
+
+import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.patches import Circle
 from scipy.integrate import solve_ivp
 from scipy.optimize import root
-import matplotlib.pyplot as plt
-from matplotlib.patches import Circle
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -170,8 +172,8 @@ def gauss_legendre_irk(y0, t_grid, mu, s=4, tol=1e-12):
             K = K_flat.reshape(s, dim)
             R = np.empty_like(K)
             for i in range(s):
-                stage_state = y_n + h * np.sum(A[i, :, None] * K, axis=0)
-                R[i] = K[i] - two_body_rhs(t_n + c[i] * h, stage_state, mu)
+                stage_state = y_n + h * np.sum(A[i, :, None] * K, axis=0)  # noqa: B023
+                R[i] = K[i] - two_body_rhs(t_n + c[i] * h, stage_state, mu)  # noqa: B023
             return R.ravel()
 
         # Use previous step's stages as the initial guess. This is much better

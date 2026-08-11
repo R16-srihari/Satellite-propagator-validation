@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 import numpy as np
 from scipy.optimize import root
@@ -134,8 +134,8 @@ def symplectic_integrate(
                 K = K_flat.reshape(s, 2 * d)
                 R = np.empty_like(K)
                 for i in range(s):
-                    stage_state = y_n + h * np.sum(A[i, :, None] * K, axis=0)
-                    t_i = t_n + c[i] * h
+                    stage_state = y_n + h * np.sum(A[i, :, None] * K, axis=0)  # noqa: B023
+                    t_i = t_n + c[i] * h  # noqa: B023
                     R[i] = K[i] - rhs_counted(t_i, stage_state)
                 return R.ravel()
 

@@ -1,10 +1,8 @@
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 import numpy as np
-
 from scipy.integrate._ivp import dop853_coefficients as coeffs
-
 
 SAFETY = 0.9
 MIN_FACTOR = 0.2

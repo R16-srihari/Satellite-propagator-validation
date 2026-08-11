@@ -9,16 +9,17 @@ from __future__ import annotations
 
 import argparse
 import csv
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence, TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any
 
 import matplotlib
+
 # Backend selection and pyplot import are deferred until `main()` to avoid
 # parsing CLI args or changing matplotlib state at import time. Plotting
 # functions import `matplotlib.pyplot` lazily so importing this module is
 # side-effect free.
 import numpy as np
-
 
 MU_EARTH_KM = 398600.4418  # km^3 / s^2
 # Earth's gravitational parameter in m^3 / s^2 (converted from km^3/s^2)
@@ -29,8 +30,8 @@ OUTPUT_DIR = Path(__file__).resolve().parent / "output"
 
 
 if TYPE_CHECKING:
-    from matplotlib.figure import Figure
     from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
 
 # Placeholder for pyplot for the type-checker; assigned at runtime if --show
 plt: Any = None
@@ -189,7 +190,7 @@ def plot_angular_momentum_error(
     angular_momentum: np.ndarray,
     output_path: Path | None = None,
     reference_h: float | None = None,
-) -> tuple["Figure", "Axes", float]:
+) -> tuple[Figure, Axes, float]:
     """Plot deviations from the mean for specific angular momentum."""
     import matplotlib.pyplot as plt
 
@@ -227,7 +228,7 @@ def plot_angular_momentum_error(
 
 def plot_energy_error(
     times: Sequence[str], energy: np.ndarray, output_path: Path | None = None, reference_e: float | None = None
-) -> tuple["Figure", "Axes", float]:
+) -> tuple[Figure, Axes, float]:
     """Plot deviations from the mean for specific orbital energy."""
     import matplotlib.pyplot as plt
 
@@ -340,10 +341,10 @@ def main():
     errors_csv = OUTPUT_DIR / "STK_errors.csv"
     save_errors_to_csv(times, h_error_series, e_error_series, errors_csv)
 
-    fig_h, ax_h, h_ref = plot_angular_momentum_error(
+    _fig_h, _ax_h, h_ref = plot_angular_momentum_error(
         times, angular_momentum, args.output_h, reference_h=reference_h
     )
-    fig_e, ax_e, e_ref = plot_energy_error(times, energy, args.output_e, reference_e=reference_e)
+    _fig_e, _ax_e, e_ref = plot_energy_error(times, energy, args.output_e, reference_e=reference_e)
 
     save_energies_to_csv(times, angular_momentum, energy, args.output_csv)
 
