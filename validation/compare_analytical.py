@@ -299,7 +299,7 @@ def _save_plot(fig, path: Path) -> None:
     plt.close(fig)
 
 
-def create_comparison_plots(output_dir, orbit_params, integrator="rk78", stk_csv=None, show=False):
+def create_comparison_plots(output_dir, orbit_params, integrator="pd853", stk_csv=None, show=False):
     """Create a validation plot set comparing the integrator against analytical and STK references."""
     output_path = Path(output_dir)
     validation_dir = output_path / "STKcomparison"
@@ -415,7 +415,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Create validation comparison plots against analytical and STK references")
     parser.add_argument("--show", action="store_true", help="Display generated plots")
     parser.add_argument("--output-dir", type=Path, default=repo_root / "output" / "validation", help="Directory for generated validation outputs")
-    parser.add_argument("--integrator", default="rk78", help="Integrator name for the plot label")
+    parser.add_argument("--integrator", default="pd853", help="Integrator name for the plot label")
     parser.add_argument("--stk-csv", type=Path, default=None, help="Optional path to STK results CSV")
     parser.add_argument("--orbit", type=Path, default=repo_root / "STK_input" / "Satellite1.opm", help="Optional path to the OPM file")
     return parser.parse_args(argv)

@@ -10,7 +10,7 @@ MAX_FACTOR = 2.0
 
 
 @dataclass
-class RK78Stats:
+class PD853Stats:
     accepted_steps: int
     rejected_steps: int
     function_evaluations: int
@@ -73,12 +73,12 @@ def _initial_step_size(
     return min(step, max_step, remaining)
 
 
-def rk78_integrate(
+def pd853_integrate(
     fun: Callable[[float, np.ndarray], np.ndarray],
     t_eval: np.ndarray,
     y0: np.ndarray,
     options: dict | None = None,
-) -> tuple[np.ndarray, np.ndarray, RK78Stats]:
+) -> tuple[np.ndarray, np.ndarray, PD853Stats]:
     """Integrate to requested output times using a standalone adaptive DOP853 stepper."""
     if options is None:
         options = {}
@@ -213,9 +213,9 @@ def rk78_integrate(
             h_abs = min(max_step, abs(h) * max(MIN_FACTOR, factor))
 
     if output_index < t_eval.size:
-        raise RuntimeError("RK78 integration failed to reach the final output time.")
+        raise RuntimeError("PD853 integration failed to reach the final output time.")
 
-    stats = RK78Stats(
+    stats = PD853Stats(
         accepted_steps=accepted_steps,
         rejected_steps=rejected_steps,
         function_evaluations=function_evaluations,

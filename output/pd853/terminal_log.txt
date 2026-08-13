@@ -1,6 +1,6 @@
 
 ========== LEO SATELLITE ORBIT SIMULATOR ==========
-Integrator: Custom RK7(8)
+Integrator: PD853 (Prince–Dormand 8(5,3))
 =====================================================
 
 
@@ -35,10 +35,10 @@ RelTol:                1e-12
 AbsTol:                1e-14
 MaxStep:                60 s
 InternalStep:                1.0e-03 s
-Output directory:       C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78
+Output directory:       C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853
 =========================
 
-=== RUNNING CUSTOM RK7(8) ===
+=== RUNNING PD853 (PRINCE–DORMAND 8(5,3)) ===
 Integration in progress...
 
 
@@ -51,7 +51,7 @@ Output points:          8641
 
 === SAVING RESULTS ===
 
-Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_cartesian.csv
+Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\orbit_cartesian.csv
 Converting to Keplerian elements...
   Progress: 10.0%
   Progress: 20.0%
@@ -64,9 +64,9 @@ Converting to Keplerian elements...
   Progress: 90.0%
   Progress: 100.0%
   Progress: 100.0%
-Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_elements.csv
-Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_energy.csv
-Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_angular_momentum.csv
+Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\orbit_elements.csv
+Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\orbit_energy.csv
+Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\orbit_angular_momentum.csv
 
 === EXPORT SUMMARY ===
 Total points exported: 8641
@@ -81,9 +81,9 @@ Semi-major axis variation (m): 1.56e-07
 
 
 Analytical Comparison Test:
-  Using exported cartesian states from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_cartesian.csv
-  Using exported energy from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_energy.csv
-  Using exported angular momentum from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_angular_momentum.csv
+  Using exported cartesian states from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\orbit_cartesian.csv
+  Using exported energy from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\orbit_energy.csv
+  Using exported angular momentum from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\orbit_angular_momentum.csv
 
   Position vector comparison:
   Analytical position vector norm:  6.828137000000000e+06 m
@@ -117,17 +117,18 @@ Analytical Comparison Test:
   Angular momentum magnitude mean rel error:          2.402176e-15
   Angular momentum magnitude max rel error:           7.750790e-15
 
-  Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\analytical_comparison.csv
+  Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\analytical_comparison.csv
 
 Comparison Plots:
-  Comparison CSV saved to C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\validation\comparison_errors.csv
-  Validation plots saved to C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\validation
+  STK comparison source: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\STK_input\Satellite1_Results.csv
+  Comparison CSV saved to C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\STKcomparison\comparison_errors.csv
+  Validation plots saved to C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\STKcomparison
 
 Conservation Plots:
-  Using exported energy and angular momentum from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_energy.csv and C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\orbit_angular_momentum.csv
-Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\energy_error.png
-Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\angular_momentum_error.png
+  Using exported energy and angular momentum from C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\orbit_energy.csv and C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\orbit_angular_momentum.csv
+Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\energy_error.png
+Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\angular_momentum_error.png
 
 ===== SIMULATION COMPLETED SUCCESSFULLY =====
 
-Terminal log saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\rk78\terminal_log.txt
+Terminal log saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\terminal_log.txt

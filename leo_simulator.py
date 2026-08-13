@@ -14,15 +14,15 @@ from src.eci_from_keplerian import eci_from_keplerian
 from src.export_results import export_results
 from src.gravity_ode import gravity_ode
 from src.orbital_parameters import orbital_parameters, read_opm_cartesian_state
-from src.rk78_integrate import rk78_integrate
+from src.pd853_integrate import pd853_integrate
 from src.symplectic_integrate import symplectic_integrate
 from validation.compare_analytical import compare_analytical, create_comparison_plots
 from validation.plot_conservation import plot_conservation
 
-IntegratorType = Literal["rk78", "symplectic"]
+IntegratorType = Literal["pd853", "symplectic"]
 
 
-class RK78Options(TypedDict, total=False):
+class PD853Options(TypedDict, total=False):
     RelTol: float
     AbsTol: float
     MaxStep: float
@@ -36,10 +36,10 @@ class SymplecticOptions(TypedDict, total=False):
     GaussLegendreXtol: float
 
 
-OptionsType = Union[RK78Options, SymplecticOptions]
+OptionsType = Union[PD853Options, SymplecticOptions]
 
 
-def _build_rk78_options() -> RK78Options:
+def _build_pd853_options() -> PD853Options:
     return {
         "RelTol": 1e-12,
         "AbsTol": 1e-14,
@@ -63,15 +63,15 @@ def _build_symplectic_options() -> SymplecticOptions:
 
 
 def _build_integrator_options(integrator: str) -> OptionsType:
-    if integrator == "rk78":
-        return _build_rk78_options()
+    if integrator == "pd853":
+        return _build_pd853_options()
     if integrator == "symplectic":
         return _build_symplectic_options()
     raise ValueError(f"Unsupported integrator: {integrator!r}")
 
 
 def _print_integrator_options(integrator: str, options: OptionsType) -> None:
-    if integrator == "rk78":
+    if integrator == "pd853":
         print("RelTol:" f"                {options.get('RelTol', 1e-10):.0e}")
         print("AbsTol:" f"                {options.get('AbsTol', 1e-12):.0e}")
         print("MaxStep:" f"                {options.get('MaxStep', 120.0):.0f} s")
@@ -113,7 +113,7 @@ class Tee:
 
 
 INTEGRATOR_DISPLAY_NAMES = {
-    "rk78": "Custom RK7(8)",
+    "pd853": "PD853 (Prince–Dormand 8(5,3))",
     "symplectic": "Gauss-Legendre (Symplectic)",
 }
 
@@ -123,7 +123,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--integrator",
         choices=sorted(INTEGRATOR_DISPLAY_NAMES.keys()),
-        default="rk78",
+        default="pd853",
         help="Integrator scheme used for propagation",
     )
     return parser.parse_args(argv)
@@ -167,8 +167,8 @@ def _run_selected_integrator(
     # Cast here to keep type-checkers happy without changing runtime behavior.
     options_dict: dict = dict(options)
 
-    if integrator == "rk78":
-        return rk78_integrate(gravity_ode, t_output, y0, options_dict)
+    if integrator == "pd853":
+        return pd853_integrate(gravity_ode, t_output, y0, options_dict)
     elif integrator == "symplectic":
         return symplectic_integrate(gravity_ode, t_output, y0, options_dict)
     else:

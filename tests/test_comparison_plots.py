@@ -10,7 +10,7 @@ from validation.compare_analytical import create_comparison_plots
 
 
 def test_create_comparison_plots_generates_expected_error_csv(tmp_path: Path) -> None:
-    output_dir = tmp_path / "run_rk78"
+    output_dir = tmp_path / "run_pd853"
     output_dir.mkdir()
 
     t = np.array([0.0, 10.0, 20.0], dtype=float)
@@ -82,7 +82,7 @@ def test_create_comparison_plots_generates_expected_error_csv(tmp_path: Path) ->
         },
     )()
 
-    create_comparison_plots(output_dir, orbit_params, integrator="rk78", show=False)
+    create_comparison_plots(output_dir, orbit_params, integrator="pd853", show=False)
 
     comparison_csv = output_dir / "validation" / "comparison_errors.csv"
     assert comparison_csv.exists()
