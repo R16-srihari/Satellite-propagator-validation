@@ -4,22 +4,20 @@ import argparse
 import sys
 from contextlib import redirect_stdout
 from pathlib import Path
+from typing import Literal, TypedDict, Union
 
 import numpy as np
+import pandas as pd
 
 from src.constants import constants
-from src.gravity_ode import gravity_ode
 from src.eci_from_keplerian import eci_from_keplerian
+from src.export_results import export_results
+from src.gravity_ode import gravity_ode
 from src.orbital_parameters import orbital_parameters, read_opm_cartesian_state
 from src.rk78_integrate import rk78_integrate
 from src.symplectic_integrate import symplectic_integrate
-from src.export_results import export_results
-from validation.compare_analytical import compare_analytical
+from validation.compare_analytical import compare_analytical, create_comparison_plots
 from validation.plot_conservation import plot_conservation
-import pandas as pd
-
-from typing import TypedDict, Literal, Union
-
 
 IntegratorType = Literal["rk78", "symplectic"]
 
@@ -271,6 +269,11 @@ def _run_simulation_core(output_dir: Path, log_file: Path, integrator: str) -> N
     print("\n=== VALIDATION ===\n")
     print("\nAnalytical Comparison Test:")
     compare_analytical(t_export, y_export, orbit, output_dir)
+
+    print("\nComparison Plots:")
+    stk_csv_path = Path(__file__).resolve().parent / "STK_input" / "Satellite1_Results.csv"
+    print(f"  STK comparison source: {stk_csv_path}")
+    create_comparison_plots(output_dir, orbit, integrator=integrator, stk_csv=stk_csv_path)
 
     print("\nConservation Plots:")
     plot_conservation(t_export, y_export, orbit, output_dir)

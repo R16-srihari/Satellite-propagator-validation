@@ -4,10 +4,11 @@
 
 This repository simulates and validates a 24-hour low Earth orbit (LEO) trajectory using a two-body gravitational model and custom integrators: an adaptive DOP853-coefficient RK7(8)-style stepper (`rk78_integrate.py`) and fixed-step symplectic Velocity Verlet (`symplectic_integrate.py`).
 
-The project has two main executable Python programs:
+The project has three main executable Python programs:
 
 1. `leo_simulator.py` — runs end-to-end orbit propagation + validation + exports.
-2. `STK_output_energy_angular_momentum_errors.py` — post-processes STK CSV output to plot conservation-error trends.
+2. `validation/compare_analytical.py` — generates comparison plots and CSV summaries against the analytical and STK references.
+3. `STK_output_energy_angular_momentum_errors.py` — post-processes STK CSV output to plot conservation-error trends.
 
 Core assumptions:
 
@@ -90,7 +91,17 @@ If either file is missing, download the latest versioned assets from the reposit
 
 You can also copy the local working files into `STK_input/` if you are regenerating them from a simulation run.
 
-### 3.2 Updating the release assets
+### 3.2 Validation comparison plots
+
+The validation plot workflow is available as a standalone module:
+
+```bash
+python -m validation.compare_analytical --show
+```
+
+This writes the comparison CSV and PNGs under `output/validation/` and can be pointed at a specific integrator folder or STK CSV via the CLI flags. `leo_simulator.py` invokes this automatically after each run, so generated outputs appear in `output/validation/*.png` without any extra steps.
+
+### 3.3 Updating the release assets
 
 Use the provided scripts to publish updated STK files to the `stk-latest` release. Both scripts upload `STK_input/Satellite1_Results.csv` and `STK_input/Satellite1.opm` when present, and each upload is stored under a unique versioned asset name so previous uploads remain available.
 
