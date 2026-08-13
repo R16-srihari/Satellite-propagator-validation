@@ -84,7 +84,7 @@ def test_create_comparison_plots_generates_expected_error_csv(tmp_path: Path) ->
 
     create_comparison_plots(output_dir, orbit_params, integrator="pd853", show=False)
 
-    comparison_csv = output_dir / "validation" / "comparison_errors.csv"
+    comparison_csv = output_dir / "STKcomparison" / "comparison_errors.csv"
     assert comparison_csv.exists()
 
     df = pd.read_csv(comparison_csv)

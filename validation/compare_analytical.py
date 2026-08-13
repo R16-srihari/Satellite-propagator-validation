@@ -126,6 +126,15 @@ def _load_orbit_from_opm(opm_path: Path | None) -> OrbitParameters:
 
 
 def _load_stk_reference(stk_csv: Path | None, orbit_params) -> dict | None:
+    """Load the STK reference CSV, converting km-unit headers to SI.
+
+    Handles STK CSV columns:
+    - Time (UTCG): calendar timestamp -> seconds from OPM epoch
+    - X/Y/Z (km) -> m (x1000)
+    - Vx/Vy/Vz (km/sec) -> m/s (x1000)
+    - Delaunay_G (km^2/sec) -> |h| in m^2/s (x1e6)
+    - Semimajor_Axis (km) -> m (x1000) -> energy = -mu/(2a)
+    """
     if stk_csv is None:
         repo_root = Path(__file__).resolve().parents[1]
         stk_csv = repo_root / "STK_input" / "Satellite1_Results.csv"
@@ -137,30 +146,55 @@ def _load_stk_reference(stk_csv: Path | None, orbit_params) -> dict | None:
     except Exception:
         return None
 
-    if "Time (UTCG)" not in df.columns:
+    # Build case-insensitive column name lookup
+    col_lower = {c.lower().strip(): c for c in df.columns}
+
+    def _find_col(*candidates):
+        for cand in candidates:
+            cl = cand.lower().strip()
+            if cl in col_lower:
+                return col_lower[cl]
         return None
 
-    time_series = df["Time (UTCG)"].astype(str)
+    time_col = _find_col("Time (UTCG)", "time (utcg)", "time_utc", "time")
+    x_col = _find_col("X (km)", "x (km)")
+    y_col = _find_col("Y (km)", "y (km)")
+    z_col = _find_col("Z (km)", "z (km)")
+    vx_col = _find_col("Vx (km/sec)", "vx (km/sec)", 'Vx (km/s)', "vx")
+    vy_col = _find_col("Vy (km/sec)", "vy (km/sec)", 'Vy (km/s)', "vy")
+    vz_col = _find_col("Vz (km/sec)", "vz (km/sec)", 'Vz (km/s)', "vz")
+    delaunay_col = _find_col("Delaunay_G (km^2/sec)", "delaunay_g (km^2/sec)",
+                             "Delaunay_G (m^2/sec)", "delaunay_g (m^2/sec)")
+    sma_col = _find_col("Semimajor_Axis (km)", "semimajor_axis (km)",
+                        "Semimajor_Axis (m)", "semimajor_axis (m)")
+
+    # Need at minimum time + position columns
+    required_cols = [time_col, x_col, y_col, z_col]
+    if any(c is None for c in required_cols):
+        return None
+
+    time_series = df[time_col].astype(str)
     valid_mask = ~time_series.str.contains("Statistics", case=False, na=False)
     df = df.loc[valid_mask].copy()
     if df.empty:
         return None
 
-    required_cols = {"x (km)", "y (km)", "z (km)", "Delaunay_G (m^2/sec)", "Semimajor_Axis (m)"}
-    if not required_cols.issubset(df.columns):
-        return None
-
     try:
         stk_epoch = orbit_params.epoch
         if stk_epoch is None:
-            first_time = str(df["Time (UTCG)"].iloc[0])
+            first_time = str(df[time_col].iloc[0])
             try:
                 stk_epoch = datetime.strptime(first_time, "%d %b %Y %H:%M:%S.%f")
             except ValueError:
-                stk_epoch = datetime.strptime(first_time, "%d %b %Y %H:%M:%S")
-        times = pd.to_datetime(df["Time (UTCG)"], format="%d %b %Y %H:%M:%S.%f", errors="coerce")
+                try:
+                    stk_epoch = datetime.strptime(first_time, "%d %b %Y %H:%M:%S")
+                except ValueError:
+                    pass
+        times = pd.to_datetime(df[time_col], format="%d %b %Y %H:%M:%S.%f", errors="coerce")
         if times.isna().all():
-            times = pd.to_datetime(df["Time (UTCG)"], format="%d %b %Y %H:%M:%S", errors="coerce")
+            times = pd.to_datetime(df[time_col], format="%d %b %Y %H:%M:%S", errors="coerce")
+        if times.isna().all():
+            times = pd.to_datetime(df[time_col], errors="coerce")
     except Exception:
         return None
 
@@ -172,16 +206,35 @@ def _load_stk_reference(stk_csv: Path | None, orbit_params) -> dict | None:
 
     seconds_from_epoch = (times - pd.Timestamp(stk_epoch)).dt.total_seconds().to_numpy(float)
     pos_m = np.column_stack((
-        df["x (km)"].to_numpy(float) * 1000.0,
-        df["y (km)"].to_numpy(float) * 1000.0,
-        df["z (km)"].to_numpy(float) * 1000.0,
+        df[x_col].to_numpy(float) * 1000.0,
+        df[y_col].to_numpy(float) * 1000.0,
+        df[z_col].to_numpy(float) * 1000.0,
     ))
-    return {
+
+    result = {
         "time_s": seconds_from_epoch,
         "position_m": pos_m,
-        "h_mag": df["Delaunay_G (m^2/sec)"].to_numpy(float),
-        "energy_Jkg": -constants().mu_earth / (2.0 * df["Semimajor_Axis (m)"].to_numpy(float)),
     }
+
+    # Velocity (km/sec -> m/s), if available
+    if vx_col is not None and vy_col is not None and vz_col is not None:
+        vel_mps = np.column_stack((
+            df[vx_col].to_numpy(float) * 1000.0,
+            df[vy_col].to_numpy(float) * 1000.0,
+            df[vz_col].to_numpy(float) * 1000.0,
+        ))
+        result["velocity_mps"] = vel_mps
+
+    # Specific angular momentum: Delaunay_G (km^2/sec) -> m^2/s (x1e6)
+    if delaunay_col is not None:
+        result["h_mag"] = df[delaunay_col].to_numpy(float) * 1e6
+
+    # Specific orbital energy: epsilon = -mu / (2a), a in meters from km
+    if sma_col is not None:
+        a_m = df[sma_col].to_numpy(float) * 1000.0
+        result["energy_Jkg"] = -constants().mu_earth / (2.0 * a_m)
+
+    return result
 
 
 def compare_analytical(t_vector, y_matrix, orbit_params, output_dir):
@@ -300,7 +353,22 @@ def _save_plot(fig, path: Path) -> None:
 
 
 def create_comparison_plots(output_dir, orbit_params, integrator="pd853", stk_csv=None, show=False):
-    """Create a validation plot set comparing the integrator against analytical and STK references."""
+    """Create a validation plot set comparing the integrator against analytical and STK references.
+
+    Parameters
+    ----------
+    output_dir : str or Path
+        The integrator-specific output directory (e.g. output/pd853).
+    orbit_params : OrbitParameters
+        Orbital parameters from the OPM file.
+    integrator : str
+        Integrator display name used in legends.
+    stk_csv : str or Path or None
+        Path to the STK results CSV. If None, defaults to
+        STK_input/Satellite1_Results.csv.
+    show : bool
+        If True, display plots interactively.
+    """
     output_path = Path(output_dir)
     validation_dir = output_path / "STKcomparison"
     validation_dir.mkdir(parents=True, exist_ok=True)
@@ -347,13 +415,37 @@ def create_comparison_plots(output_dir, orbit_params, integrator="pd853", stk_cs
 
     stk_data = _load_stk_reference(Path(stk_csv) if stk_csv is not None else None, orbit_params)
 
+    # Precompute analytical values on the integrator time grid for interpolation
+    h_ana_mag_arr = h_ana_mag  # already computed above
+    energy_ana_arr = np.full_like(t_values, orbit_params.energy)
+
+    # Interpolate analytical h and energy onto STK time grid
+    def _interp_analytical(stk_time):
+        """Interpolate analytical reference values onto STK time stamps."""
+        h_interp = np.interp(stk_time, t_values, h_ana_mag_arr)
+        energy_interp = np.interp(stk_time, t_values, energy_ana_arr)
+        r_ana_interp = np.column_stack(
+            [np.interp(stk_time, t_values, r_ana[:, i]) for i in range(3)]
+        )
+        v_ana_interp = np.column_stack(
+            [np.interp(stk_time, t_values, v_ana[:, i]) for i in range(3)]
+        )
+        return r_ana_interp, v_ana_interp, h_interp, energy_interp
+
     def _plot_series(title: str, y_label: str, y_values: np.ndarray, save_name: str, x_values=None, stky=None, stklab="STK"):
+        """Plot a single data series.
+
+        The integrator curve is plotted *after* the STK curve so that the
+        integrator line appears on top of the STK line in the final image.
+        """
         if plt is None:
             return
         fig, ax = plt.subplots(figsize=(10, 5))
-        ax.plot(t_values, y_values, label=f"{integrator}", linewidth=2.0)
+        # Plot STK data first (if available) to ensure it is underneath
         if x_values is not None and stky is not None:
-            ax.plot(x_values, stky, label=stklab, linestyle="--", linewidth=1.5)
+            ax.plot(x_values, stky, label=stklab, linestyle="--",color='orange', linewidth=1.5)
+        # Then plot the integrator data on top
+        ax.plot(t_values, y_values, label=f"{integrator}", color='blue', linewidth=2.0)
         ax.axhline(0.0, color="black", linestyle="--", linewidth=1.0, alpha=0.7)
         ax.set_title(title)
         ax.set_xlabel("Time [s]")
@@ -362,44 +454,111 @@ def create_comparison_plots(output_dir, orbit_params, integrator="pd853", stk_cs
         ax.legend()
         _save_plot(fig, validation_dir / save_name)
 
-    stk_time = np.asarray(stk_data["time_s"], dtype=float) if stk_data is not None else None
     if stk_data is not None:
-        assert stk_time is not None
-        st_ana = np.column_stack([np.interp(stk_time, t_values, r_ana[:, i]) for i in range(3)])
-        stk_position_error = stk_data["position_m"] - st_ana
-        analytic_h_at_stk = np.interp(stk_time, t_values, h_ana_mag)
-        analytic_energy_at_stk = np.interp(stk_time, t_values, orbit_params.energy * np.ones_like(t_values))
-    else:
-        stk_position_error = None
-        analytic_h_at_stk = None
-        analytic_energy_at_stk = None
+        stk_time = np.asarray(stk_data["time_s"], dtype=float)
+        # Interpolate analytical reference onto STK time grid
+        r_ana_stk, v_ana_stk, h_ana_stk, energy_ana_stk = _interp_analytical(stk_time)
 
-    _plot_series("Position Error in x", "Δx [m]", r_err[:, 0], "x_position_error.png",
-                 x_values=stk_time,
+        # STK position error (STK position vs interpolated analytical)
+        stk_position_error = stk_data["position_m"] - r_ana_stk
+
+        # STK velocity error (STK velocity vs interpolated analytical)
+        if "velocity_mps" in stk_data:
+            stk_velocity = stk_data["velocity_mps"]
+            stk_velocity_error = stk_velocity - v_ana_stk
+        else:
+            stk_velocity_error = None
+
+        # STK angular momentum error
+        if "h_mag" in stk_data:
+            stk_h_error = np.abs(stk_data["h_mag"] - h_ana_stk)
+        else:
+            stk_h_error = None
+
+        # STK energy error
+        if "energy_Jkg" in stk_data:
+            stk_energy_error = np.abs(stk_data["energy_Jkg"] - energy_ana_stk)
+        else:
+            stk_energy_error = None
+
+        # Build and write STK comparison errors CSV
+        n_stk = len(stk_time)
+        if stk_velocity_error is not None:
+            stk_errors_df = pd.DataFrame(
+                {
+                    "time_s": stk_time,
+                    "r_error_norm_m": np.linalg.norm(stk_position_error, axis=1),
+                    "v_error_norm_ms": np.linalg.norm(stk_velocity_error, axis=1),
+                    "vx_error_ms": stk_velocity_error[:, 0],
+                    "vy_error_ms": stk_velocity_error[:, 1],
+                    "vz_error_ms": stk_velocity_error[:, 2],
+                    "h_error_m2s": stk_h_error if stk_h_error is not None else np.full(n_stk, np.nan),
+                    "energy_error_Jkg": stk_energy_error if stk_energy_error is not None else np.full(n_stk, np.nan),
+                }
+            )
+        else:
+            stk_errors_df = pd.DataFrame(
+                {
+                    "time_s": stk_time,
+                    "r_error_norm_m": np.linalg.norm(stk_position_error, axis=1),
+                    "v_error_norm_ms": np.full(n_stk, np.nan),
+                    "vx_error_ms": np.full(n_stk, np.nan),
+                    "vy_error_ms": np.full(n_stk, np.nan),
+                    "vz_error_ms": np.full(n_stk, np.nan),
+                    "h_error_m2s": stk_h_error if stk_h_error is not None else np.full(n_stk, np.nan),
+                    "energy_error_Jkg": stk_energy_error if stk_energy_error is not None else np.full(n_stk, np.nan),
+                }
+            )
+        stk_errors_csv = validation_dir / "stk_comparison_errors.csv"
+        stk_errors_df.to_csv(stk_errors_csv, index=False)
+        print(f"  STK comparison CSV saved to {stk_errors_csv}")
+    else:
+        stk_time = None
+        stk_position_error = None
+        stk_velocity_error = None
+        stk_h_error = None
+        stk_energy_error = None
+
+    _plot_series("Position Error in x", "Position Error x [m]", r_err[:, 0], "x_position_error.png",
+                 x_values=stk_time if stk_data is not None else None,
                  stky=stk_position_error[:, 0] if stk_position_error is not None else None)
 
-    _plot_series("Position Error in y", "Δy [m]", r_err[:, 1], "y_position_error.png",
-                 x_values=stk_time,
+    _plot_series("Position Error in y", "Position Error y [m]", r_err[:, 1], "y_position_error.png",
+                 x_values=stk_time if stk_data is not None else None,
                  stky=stk_position_error[:, 1] if stk_position_error is not None else None)
 
-    _plot_series("Position Error in z", "Δz [m]", r_err[:, 2], "z_position_error.png",
-                 x_values=stk_time,
+    _plot_series("Position Error in z", "Position Error z [m]", r_err[:, 2], "z_position_error.png",
+                 x_values=stk_time if stk_data is not None else None,
                  stky=stk_position_error[:, 2] if stk_position_error is not None else None)
 
-    _plot_series("Position Error Magnitude", "||Δr|| [m]", np.linalg.norm(r_err, axis=1), "position_error.png",
-                 x_values=stk_time,
+    _plot_series("Position Error Magnitude", "Position Error ||r|| [m]", np.linalg.norm(r_err, axis=1), "position_error.png",
+                 x_values=stk_time if stk_data is not None else None,
                  stky=np.linalg.norm(stk_position_error, axis=1) if stk_position_error is not None else None)
 
-    _plot_series("Velocity Error in vx", "Δvx [m/s]", v_err[:, 0], "vx_error.png")
-    _plot_series("Velocity Error in vy", "Δvy [m/s]", v_err[:, 1], "vy_error.png")
-    _plot_series("Velocity Error in vz", "Δvz [m/s]", v_err[:, 2], "vz_error.png")
-    _plot_series("Velocity Error Magnitude", "||Δv|| [m/s]", np.linalg.norm(v_err, axis=1), "velocity_error.png")
-    _plot_series("Specific Angular Momentum Error", "|Δh| [m^2/s]", h_err, "angular_momentum_error.png",
-                 x_values=stk_time,
-                 stky=np.abs(stk_data["h_mag"] - analytic_h_at_stk) if stk_data is not None else None)
-    _plot_series("Specific Orbital Energy Error", "Δε [J/kg]", energy_err, "energy_error.png",
-                 x_values=stk_time,
-                 stky=np.abs(stk_data["energy_Jkg"] - analytic_energy_at_stk) if stk_data is not None else None)
+    # Velocity error plots include STK overlay when available
+    _plot_series("Velocity Error in vx", "Velocity Error vx [m/s]", v_err[:, 0], "vx_error.png",
+                 x_values=stk_time if stk_data is not None else None,
+                 stky=stk_velocity_error[:, 0] if stk_velocity_error is not None else None)
+
+    _plot_series("Velocity Error in vy", "Velocity Error vy [m/s]", v_err[:, 1], "vy_error.png",
+                 x_values=stk_time if stk_data is not None else None,
+                 stky=stk_velocity_error[:, 1] if stk_velocity_error is not None else None)
+
+    _plot_series("Velocity Error in vz", "Velocity Error vz [m/s]", v_err[:, 2], "vz_error.png",
+                 x_values=stk_time if stk_data is not None else None,
+                 stky=stk_velocity_error[:, 2] if stk_velocity_error is not None else None)
+
+    _plot_series("Velocity Error Magnitude", "Velocity Error ||v|| [m/s]", np.linalg.norm(v_err, axis=1), "velocity_error.png",
+                 x_values=stk_time if stk_data is not None else None,
+                 stky=np.linalg.norm(stk_velocity_error, axis=1) if stk_velocity_error is not None else None)
+
+    _plot_series("Specific Angular Momentum Error", "Angular Momentum Error |h| [m^2/s]", h_err, "angular_momentum_error.png",
+                 x_values=stk_time if stk_data is not None else None,
+                 stky=stk_h_error if stk_h_error is not None else None)
+
+    _plot_series("Specific Orbital Energy Error", "Energy Error [J/kg]", energy_err, "energy_error.png",
+                 x_values=stk_time if stk_data is not None else None,
+                 stky=stk_energy_error if stk_energy_error is not None else None)
 
     print(f"  Comparison CSV saved to {comparison_file}")
     print(f"  Validation plots saved to {validation_dir}")
@@ -414,8 +573,8 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     repo_root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description="Create validation comparison plots against analytical and STK references")
     parser.add_argument("--show", action="store_true", help="Display generated plots")
-    parser.add_argument("--output-dir", type=Path, default=repo_root / "output" / "validation", help="Directory for generated validation outputs")
-    parser.add_argument("--integrator", default="pd853", help="Integrator name for the plot label")
+    parser.add_argument("--output-dir", type=Path, default=repo_root / "output", help="Base output directory (integrator subdirectory will be appended)")
+    parser.add_argument("--integrator", default="pd853", help="Integrator name subdirectory under --output-dir")
     parser.add_argument("--stk-csv", type=Path, default=None, help="Optional path to STK results CSV")
     parser.add_argument("--orbit", type=Path, default=repo_root / "STK_input" / "Satellite1.opm", help="Optional path to the OPM file")
     return parser.parse_args(argv)
@@ -424,9 +583,10 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> None:
     args = _parse_args(argv)
     output_dir = Path(args.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    integrator_dir = output_dir / args.integrator
+    integrator_dir.mkdir(parents=True, exist_ok=True)
     orbit_params = _load_orbit_from_opm(args.orbit)
-    create_comparison_plots(output_dir, orbit_params, integrator=args.integrator, stk_csv=args.stk_csv, show=args.show)
+    create_comparison_plots(integrator_dir, orbit_params, integrator=args.integrator, stk_csv=args.stk_csv, show=args.show)
 
 
 if __name__ == "__main__":

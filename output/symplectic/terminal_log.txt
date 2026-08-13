@@ -121,6 +121,7 @@ Analytical Comparison Test:
 
 Comparison Plots:
   STK comparison source: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\STK_input\Satellite1_Results.csv
+  STK comparison CSV saved to C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\STKcomparison\stk_comparison_errors.csv
   Comparison CSV saved to C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\STKcomparison\comparison_errors.csv
   Validation plots saved to C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\STKcomparison
 
