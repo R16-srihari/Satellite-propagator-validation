@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-This repository simulates and validates a 24-hour low Earth orbit (LEO) trajectory using a two-body gravitational model and custom integrators: an adaptive DOP853-coefficient RK7(8)-style stepper (`rk78_integrate.py`) and fixed-step symplectic Velocity Verlet (`symplectic_integrate.py`).
+This repository simulates and validates a 24-hour low Earth orbit (LEO) trajectory using a two-body gravitational model and custom integrators: an adaptive DOP853-coefficient RK7(8)-style stepper (`pd853_integrate.py`) and a fully implicit, fixed-step symplectic Gauss–Legendre integrator (`symplectic_integrate.py`).
 
 The project has three main executable Python programs:
 
@@ -48,14 +48,13 @@ Satellite-propagator-validation/
 │   ├── gravity_ode.py
 │   ├── keplerian_from_eci.py
 │   ├── orbital_parameters.py
-│   ├── rk78_integrate.py
+│   ├── pd853_integrate.py
 │   └── symplectic_integrate.py
 ├── validation/
 │   ├── __init__.py
 │   ├── compare_analytical.py
-│   ├── energy_check.py
 │   └── plot_conservation.py
-├── scripts/
+├── Releases-scripts/
 │   ├── update_release_asset.sh
 │   ├── update_release_asset.ps1
 │   └── update_release_asset.sh.bak
@@ -99,7 +98,24 @@ The validation plot workflow is available as a standalone module:
 python -m validation.compare_analytical --show
 ```
 
-This writes the comparison CSV and PNGs under `output/validation/` and can be pointed at a specific integrator folder or STK CSV via the CLI flags. `leo_simulator.py` invokes this automatically after each run, so generated outputs appear in `output/validation/*.png` without any extra steps.
+By default this writes the comparison CSVs and PNGs under `output/pd853/STKcomparison/` (integrator defaults to `pd853`). The CLI flags control the output base directory, integrator subdirectory, STK reference file, and orbit parameters file:
+
+```bash
+python -m validation.compare_analytical \
+  --output-dir output \
+  --integrator symplectic \
+  --stk-csv STK_input/Satellite1_Results.csv \
+  --orbit STK_input/Satellite1.opm \
+  --show
+```
+
+Generated artifacts:
+
+- `comparison_errors.csv` — integrator-vs-analytical time-series errors (position, velocity, angular momentum, energy)
+- `stk_comparison_errors.csv` — STK-vs-analytical time-series errors (written when the STK CSV is available)
+- PNG error plots for position and velocity components/magnitudes, specific angular momentum, and specific orbital energy (integrator curve overlaid with the STK curve when available)
+
+`leo_simulator.py` invokes this automatically after each run, so the plots and CSVs appear in `output/<integrator>/STKcomparison/` without any extra steps.
 
 ### 3.3 Updating the release assets
 
@@ -108,16 +124,16 @@ Use the provided scripts to publish updated STK files to the `stk-latest` releas
 PowerShell:
 
 ```powershell
-.\scripts\update_release_asset.ps1 -Owner <owner> -Repo Satellite-propagator-validation -Tag stk-latest
+.\Releases-scripts\update_release_asset.ps1 -Owner <owner> -Repo Satellite-propagator-validation -Tag stk-latest
 ```
 
 Bash:
 
 ```bash
-OWNER=<owner> REPO=Satellite-propagator-validation TAG=stk-latest ./scripts/update_release_asset.sh
+OWNER=<owner> REPO=Satellite-propagator-validation TAG=stk-latest ./Releases-scripts/update_release_asset.sh
 ```
 
-### 3.3 Notebook workflow
+### 3.4 Notebook workflow
 
 The notebook demo lives in `notebooks/Propagation_Demo.ipynb` and is paired with `notebooks/Propagation_Demo.py` for Jupytext-based version control.
 
