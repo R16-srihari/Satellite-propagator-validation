@@ -6,7 +6,7 @@ from dataclasses import dataclass
 class Constants:
     """Physical and numerical constants used by the simulator."""
 
-    mu_earth: float = 3.986004418e14
+    mu_earth: float = 3.986004415e14
     r_earth: float = 6378137.0
     r_earth_eq: float = 6378137.0
     r_earth_polar: float = 6356752.314245

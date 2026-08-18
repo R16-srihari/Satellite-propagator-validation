@@ -10,3 +10,5 @@ STK_input/Satellite1.opm
 
 .vscode/
 /.github/
+
+two_body_orbit_symplectic.py

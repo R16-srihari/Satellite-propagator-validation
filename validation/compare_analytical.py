@@ -509,7 +509,9 @@ def create_comparison_plots(output_dir, orbit_params, integrator="pd853", stk_cs
                     "energy_error_Jkg": stk_energy_error if stk_energy_error is not None else np.full(n_stk, np.nan),
                 }
             )
-        stk_errors_csv = validation_dir / "stk_comparison_errors.csv"
+        # Write to base output directory as STK_errors.csv
+        base_output_dir = output_path.parent if output_path.name != "output" else output_path
+        stk_errors_csv = base_output_dir / "STK_errors.csv"
         stk_errors_df.to_csv(stk_errors_csv, index=False)
         print(f"  STK comparison CSV saved to {stk_errors_csv}")
     else:

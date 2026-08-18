@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from src.constants import constants
+
 
 def plot_conservation(t_vector, y_matrix, orbit_params, output_dir):
     """Plot conserved quantities vs time with analytical baselines and zoomed error views."""
@@ -41,7 +43,7 @@ def plot_conservation(t_vector, y_matrix, orbit_params, output_dir):
         h_error = np.asarray(df_h["dH_abs"], dtype=float)
     else:
         # Fallback to computing from state vectors if files are not found
-        mu_earth = 3.986004418e14
+        mu_earth = constants().mu_earth
         r_vec = y_matrix[:, 0:3]
         v_vec = y_matrix[:, 3:6]
         r_mag = np.linalg.norm(r_vec, axis=1)

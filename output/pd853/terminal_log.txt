@@ -71,9 +71,9 @@ Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technolog
 === EXPORT SUMMARY ===
 Total points exported: 8641
 Time span: 24.00 hours (15.39 orbits)
-Energy variation (%): min=-1.56e-12, max=7.27e-13, mean=4.81e-13
-Angular momentum variation (%): 1.13e-12
-Semi-major axis variation (m): 1.56e-07
+Energy variation (%): min=-1.28e-13, max=1.44e-12, mean=6.60e-13
+Angular momentum variation (%): 7.90e-13
+Semi-major axis variation (m): 1.07e-07
 ======================
 
 
@@ -87,41 +87,41 @@ Analytical Comparison Test:
 
   Position vector comparison:
   Analytical position vector norm:  6.828137000000000e+06 m
-  Mean numerical position vector norm: 6.828136994895655e+06 m
-  Mean error norm:                3.726240e-01 m
-  Maximum error norm:             7.386077e-01 m
-  Mean rel error:                 5.457184e-08
-  Maximum rel error:              1.081712e-07
+  Mean numerical position vector norm: 6.828137000000044e+06 m
+  Mean error norm:                2.624105e-06 m
+  Maximum error norm:             6.585053e-06 m
+  Mean rel error:                 3.843076e-13
+  Maximum rel error:              9.643996e-13
 
   Velocity vector comparison:
-  Analytical velocity vector norm:  7.640429535277371e+03 m/s
-  Mean numerical velocity vector norm: 7.640429538113710e+03 m/s
-  Mean error norm:                4.169381e-04 m/s
-  Maximum error norm:             8.301968e-04 m/s
-  Mean rel error:                 5.456998e-08
-  Maximum rel error:              1.086584e-07
+  Analytical velocity vector norm:  7.640429532402150e+03 m/s
+  Mean numerical velocity vector norm: 7.640429532402123e+03 m/s
+  Mean error norm:                2.934437e-09 m/s
+  Maximum error norm:             7.341438e-09 m/s
+  Mean rel error:                 3.840670e-13
+  Maximum rel error:              9.608671e-13
 
   Energy comparison:
-  Energy analytical value:        -2.918808174176939e+07 J/kg
-  Energy mean numerical value:    -2.918808176373739e+07 J/kg
-  Energy mean abs error:          1.404785e-07 J/kg
-  Energy max abs error:           4.544854e-07 J/kg
-  Energy mean rel error:          4.812872e-15
-  Energy max rel error:           1.557092e-14
+  Energy analytical value:        -2.918808171980146e+07 J/kg
+  Energy mean numerical value:    -2.918808171980127e+07 J/kg
+  Energy mean abs error:          1.927209e-07 J/kg
+  Energy max abs error:           4.209578e-07 J/kg
+  Energy mean rel error:          6.602727e-15
+  Energy max rel error:           1.442225e-14
 
   Angular momentum magnitude comparison:
-  Angular momentum magnitude analytical value:        5.216989960572022e+10 m^2/s
-  Angular momentum magnitude mean numerical value:    5.216989958608775e+10 m^2/s
-  Angular momentum magnitude mean abs error:          1.253213e-04 m^2/s
-  Angular momentum magnitude max abs error:           4.043579e-04 m^2/s
-  Angular momentum magnitude mean rel error:          2.402176e-15
-  Angular momentum magnitude max rel error:           7.750790e-15
+  Angular momentum magnitude analytical value:        5.216989958608781e+10 m^2/s
+  Angular momentum magnitude mean numerical value:    5.216989958608799e+10 m^2/s
+  Angular momentum magnitude mean abs error:          1.717598e-04 m^2/s
+  Angular momentum magnitude max abs error:           3.738403e-04 m^2/s
+  Angular momentum magnitude mean rel error:          3.292317e-15
+  Angular momentum magnitude max rel error:           7.165824e-15
 
   Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\analytical_comparison.csv
 
 Comparison Plots:
   STK comparison source: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\STK_input\Satellite1_Results.csv
-  STK comparison CSV saved to C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\STKcomparison\stk_comparison_errors.csv
+  STK comparison CSV saved to C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\STK_errors.csv
   Comparison CSV saved to C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\STKcomparison\comparison_errors.csv
   Validation plots saved to C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\pd853\STKcomparison
 
