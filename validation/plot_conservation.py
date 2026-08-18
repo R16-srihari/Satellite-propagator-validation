@@ -81,7 +81,7 @@ def plot_conservation(t_vector, y_matrix, orbit_params, output_dir):
     plt.close()
 
     # Angular momentum error plot
-    fig, ax = plt.subplots(figsize=(14, 6))
+    _fig, ax = plt.subplots(figsize=(14, 6))
     ax.plot(time_index, h_error, linewidth=1.2, color="darkblue", label="Angular Momentum Error")
     ax.axhline(0.0, color="green", linestyle="--", linewidth=1.5)
     ax.set_xlabel("Sample index")
