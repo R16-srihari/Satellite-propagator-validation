@@ -38,7 +38,8 @@ Satellite-propagator-validation/
 ├── STK_input/
 │   ├── Satellite1.opm
 │   ├── Satellite1.opm.example
-│   └── Satellite1_Results.csv
+│   ├── Satellite1_Results.csv
+|   └── Satellite1_Results.csv.example
 ├── src/
 │   ├── __init__.py
 │   ├── analytical_solution.py
@@ -54,12 +55,15 @@ Satellite-propagator-validation/
 │   ├── __init__.py
 │   ├── compare_analytical.py
 │   └── plot_conservation.py
-├── Releases-scripts/
-│   ├── update_release_asset.sh
-│   ├── update_release_asset.ps1
-│   └── update_release_asset.sh.bak
+├── tests/
+│   ├── test_analytical_solution.py
+│   ├── test_comparative_plots.py
+│   ├── test_comparison_plots.py
+│   └── test_orbital_parameters.py
 └── output/
 ```
+
+> **Note:** `STK_input/Satellite1.opm` and `STK_input/Satellite1_Results.csv` are gitignored (listed in `.gitignore`). You must place them manually in `STK_input/` before running the simulation. Example files with the expected format are provided as `Satellite1.opm.example` and `Satellite1_Results.csv.example`.
 
 ---
 
@@ -83,12 +87,12 @@ Main packages:
 
 The simulation expects the STK input files in `STK_input/`:
 
-- `Satellite1_Results.csv` (downloaded from GitHub Releases)
-- `Satellite1.opm` (downloaded from GitHub Releases)
+- `Satellite1_Results.csv` — STK-generated trajectory results (position, velocity, orbital elements)
+- `Satellite1.opm` — Orbit Parameter Message file with initial state
 
-If either file is missing, download the latest versioned assets from the repository's Releases page and place them in `STK_input/`. The release uploader now keeps each published STK file as a unique timestamped asset instead of replacing an older upload.
+**These files must be placed manually in `STK_input/`.** You can download these files from the latest release assets (https://github.com/R16-srihari/Satellite-propagator-validation/releases/latest) or generate them from your own STK simulation.
 
-You can also copy the local working files into `STK_input/` if you are regenerating them from a simulation run.
+You can also copy local working files into `STK_input/` if you are regenerating them from a simulation run.
 
 ### 3.2 Validation comparison plots
 
@@ -116,34 +120,6 @@ Generated artifacts:
 - PNG error plots for position and velocity components/magnitudes, specific angular momentum, and specific orbital energy (integrator curve overlaid with the STK curve when available)
 
 `leo_simulator.py` invokes this automatically after each run, so the plots and CSVs appear in `output/<integrator>/STKcomparison/` without any extra steps.
-
-### 3.3 Updating the release assets
-
-Use the provided scripts to publish updated STK files to the `stk-latest` release. Both scripts upload `STK_input/Satellite1_Results.csv` and `STK_input/Satellite1.opm` when present, and each upload is stored under a unique versioned asset name so previous uploads remain available.
-
-PowerShell:
-
-```powershell
-.\Releases-scripts\update_release_asset.ps1 -Owner <owner> -Repo Satellite-propagator-validation -Tag stk-latest
-```
-
-Bash:
-
-```bash
-OWNER=<owner> REPO=Satellite-propagator-validation TAG=stk-latest ./Releases-scripts/update_release_asset.sh
-```
-
-### 3.4 Notebook workflow
-
-The notebook demo lives in `notebooks/Propagation_Demo.ipynb` and is paired with `notebooks/Propagation_Demo.py` for Jupytext-based version control.
-
-To work with the notebook source file directly, install the dependencies first:
-
-```bash
-pip install -r requirements.txt
-```
-
-Then open the notebook in VS Code or sync the pair with Jupytext if you prefer editing the `.py` source as the canonical version.
 
 ---
 

@@ -6,7 +6,7 @@
 **/_pycache__/
 /__pycache__/
 
-# Ignore the working STK input file (canonical file replaced locally)
+# Ignore the working STK files (canonical file replaced locally by downloading from the latest release of the STK results and .opm files from the GitHub repository)
 STK_input/Satellite1_Results.csv
 STK_input/Satellite1.opm
 
