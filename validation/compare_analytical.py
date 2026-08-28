@@ -352,7 +352,7 @@ def _save_plot(fig, path: Path) -> None:
     plt.close(fig)
 
 
-def create_comparison_plots(output_dir, orbit_params, integrator="pd853", stk_csv=None, show=False):
+def create_comparison_plots(output_dir, orbit_params, integrator="pd853", stk_csv=None, show=False, log_scale=True):
     """Create a validation plot set comparing the integrator against analytical and STK references.
 
     Parameters
@@ -432,7 +432,7 @@ def create_comparison_plots(output_dir, orbit_params, integrator="pd853", stk_cs
         )
         return r_ana_interp, v_ana_interp, h_interp, energy_interp
 
-    def _plot_series(title: str, y_label: str, y_values: np.ndarray, save_name: str, x_values=None, stky=None, stklab="STK"):
+    def _plot_series(title: str, y_label: str, y_values: np.ndarray, save_name: str, x_values=None, stky=None, stklab="STK", log_y: bool = False):
         """Plot a single data series.
 
         The integrator curve is plotted *after* the STK curve so that the
@@ -449,7 +449,9 @@ def create_comparison_plots(output_dir, orbit_params, integrator="pd853", stk_cs
         ax.axhline(0.0, color="black", linestyle="--", linewidth=1.0, alpha=0.7)
         ax.set_title(title)
         ax.set_xlabel("Time [s]")
-        ax.set_ylabel(y_label)
+        ax.set_ylabel(y_label + " (log scale)" if log_y else y_label)
+        if log_y:
+            ax.set_yscale("symlog", linthresh=1e-15)
         ax.grid(True, alpha=0.3)
         ax.legend()
         _save_plot(fig, validation_dir / save_name)
@@ -523,44 +525,54 @@ def create_comparison_plots(output_dir, orbit_params, integrator="pd853", stk_cs
 
     _plot_series("Position Error in x", "Position Error x [m]", r_err[:, 0], "x_position_error.png",
                  x_values=stk_time if stk_data is not None else None,
-                 stky=stk_position_error[:, 0] if stk_position_error is not None else None)
+                 stky=stk_position_error[:, 0] if stk_position_error is not None else None,
+                 log_y=log_scale)
 
     _plot_series("Position Error in y", "Position Error y [m]", r_err[:, 1], "y_position_error.png",
                  x_values=stk_time if stk_data is not None else None,
-                 stky=stk_position_error[:, 1] if stk_position_error is not None else None)
+                 stky=stk_position_error[:, 1] if stk_position_error is not None else None,
+                 log_y=log_scale)
 
     _plot_series("Position Error in z", "Position Error z [m]", r_err[:, 2], "z_position_error.png",
                  x_values=stk_time if stk_data is not None else None,
-                 stky=stk_position_error[:, 2] if stk_position_error is not None else None)
+                 stky=stk_position_error[:, 2] if stk_position_error is not None else None,
+                 log_y=log_scale)
 
     _plot_series("Position Error Magnitude", "Position Error ||r|| [m]", np.linalg.norm(r_err, axis=1), "position_error.png",
                  x_values=stk_time if stk_data is not None else None,
-                 stky=np.linalg.norm(stk_position_error, axis=1) if stk_position_error is not None else None)
+                 stky=np.linalg.norm(stk_position_error, axis=1) if stk_position_error is not None else None,
+                 log_y=log_scale)
 
     # Velocity error plots include STK overlay when available
-    _plot_series("Velocity Error in vx", "Velocity Error vx [m/s]", v_err[:, 0], "vx_error.png",
+    _plot_series("Velocity Error in vx", "Velocity Error vx [m/s] (log scale)", v_err[:, 0], "vx_error.png",
                  x_values=stk_time if stk_data is not None else None,
-                 stky=stk_velocity_error[:, 0] if stk_velocity_error is not None else None)
+                 stky=stk_velocity_error[:, 0] if stk_velocity_error is not None else None,
+                 log_y=log_scale)
 
-    _plot_series("Velocity Error in vy", "Velocity Error vy [m/s]", v_err[:, 1], "vy_error.png",
+    _plot_series("Velocity Error in vy", "Velocity Error vy [m/s] (log scale)", v_err[:, 1], "vy_error.png",
                  x_values=stk_time if stk_data is not None else None,
-                 stky=stk_velocity_error[:, 1] if stk_velocity_error is not None else None)
+                 stky=stk_velocity_error[:, 1] if stk_velocity_error is not None else None,
+                 log_y=log_scale)
 
-    _plot_series("Velocity Error in vz", "Velocity Error vz [m/s]", v_err[:, 2], "vz_error.png",
+    _plot_series("Velocity Error in vz", "Velocity Error vz [m/s] (log scale)", v_err[:, 2], "vz_error.png",
                  x_values=stk_time if stk_data is not None else None,
-                 stky=stk_velocity_error[:, 2] if stk_velocity_error is not None else None)
+                 stky=stk_velocity_error[:, 2] if stk_velocity_error is not None else None,
+                 log_y=log_scale)
 
-    _plot_series("Velocity Error Magnitude", "Velocity Error ||v|| [m/s]", np.linalg.norm(v_err, axis=1), "velocity_error.png",
+    _plot_series("Velocity Error Magnitude", "Velocity Error ||v|| [m/s] (log scale)", np.linalg.norm(v_err, axis=1), "velocity_error.png",
                  x_values=stk_time if stk_data is not None else None,
-                 stky=np.linalg.norm(stk_velocity_error, axis=1) if stk_velocity_error is not None else None)
+                 stky=np.linalg.norm(stk_velocity_error, axis=1) if stk_velocity_error is not None else None,
+                 log_y=log_scale)
 
-    _plot_series("Specific Angular Momentum Error", "Angular Momentum Error |h| [m^2/s]", h_err, "angular_momentum_error.png",
+    _plot_series("Specific Angular Momentum Error", "Angular Momentum Error |h| [m^2/s] (log scale)", h_err, "angular_momentum_error.png",
                  x_values=stk_time if stk_data is not None else None,
-                 stky=stk_h_error if stk_h_error is not None else None)
+                 stky=stk_h_error if stk_h_error is not None else None,
+                 log_y=log_scale)
 
-    _plot_series("Specific Orbital Energy Error", "Energy Error [J/kg]", energy_err, "energy_error.png",
+    _plot_series("Specific Orbital Energy Error", "Energy Error [J/kg] (log scale)", energy_err, "energy_error.png",
                  x_values=stk_time if stk_data is not None else None,
-                 stky=stk_energy_error if stk_energy_error is not None else None)
+                 stky=stk_energy_error if stk_energy_error is not None else None,
+                 log_y=log_scale)
 
     print(f"  Comparison CSV saved to {comparison_file}")
     print(f"  Validation plots saved to {validation_dir}")

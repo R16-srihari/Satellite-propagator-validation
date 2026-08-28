@@ -156,6 +156,7 @@ def _plot_component_overlay(
     t_values: np.ndarray,
     save_name: str,
     out_dir: Path,
+    log_y: bool = False,
 ) -> None:
     """Create a 3-panel overlay plot for x/y/z or vx/vy/vz component errors.
 
@@ -181,7 +182,9 @@ def _plot_component_overlay(
             linestyle=_INTEGRATOR_STYLES["symplectic"]["linestyle"],
         )
         ax.axhline(0.0, color="black", linestyle="--", linewidth=0.8, alpha=0.7)
-        ax.set_ylabel(f"{label} [{y_label_unit}]")
+        if log_y:
+            ax.set_yscale("symlog", linthresh=1e-15)
+        ax.set_ylabel(f"{label} [{y_label_unit}]" + (" (log scale)" if log_y else ""))
         ax.grid(True, alpha=0.3)
         ax.legend(loc="best", fontsize="small")
     axes[-1].set_xlabel("Time [s]")
@@ -323,6 +326,7 @@ def create_comparative_plots(
     output_dir: str | Path | None = None,
     orbit_params=None,
     show: bool = False,
+    log_scale: bool = True,
 ) -> Path:
     """Create overlay comparison plots between pd853 and symplectic integrators.
 
@@ -380,7 +384,7 @@ def create_comparative_plots(
     # --- Magnitude overlay plots ----------------------------------------
     _plot_overlay(
         "Position Error Magnitude (||r||) - pd853 vs symplectic",
-        "Position Error ||r|| [m]",
+        "Position Error ||r|| [m] (log scale)",
         {
             "pd853": pd853_df["r_error_norm_m"].to_numpy(float),
             "symplectic": symplectic_df["r_error_norm_m"].to_numpy(float),
@@ -388,12 +392,12 @@ def create_comparative_plots(
         common_t,
         "comparative_position_error.png",
         out_dir,
-        log_y=True,
+        log_y=log_scale,
     )
 
     _plot_overlay(
         "Velocity Error Magnitude (||v||) - pd853 vs symplectic",
-        "Velocity Error ||v|| [m/s]",
+        "Velocity Error ||v|| [m/s] (log scale)",
         {
             "pd853": pd853_df["v_error_norm_ms"].to_numpy(float),
             "symplectic": symplectic_df["v_error_norm_ms"].to_numpy(float),
@@ -401,12 +405,12 @@ def create_comparative_plots(
         common_t,
         "comparative_velocity_error.png",
         out_dir,
-        log_y=True,
+        log_y=log_scale,
     )
 
     _plot_overlay(
         "Specific Angular Momentum Error (|h|) - pd853 vs symplectic",
-        "Angular Momentum Error |h| [m^2/s]",
+        "Angular Momentum Error |h| [m^2/s] (log scale)",
         {
             "pd853": pd853_df["|h|_error_m2s"].to_numpy(float),
             "symplectic": symplectic_df["|h|_error_m2s"].to_numpy(float),
@@ -414,12 +418,12 @@ def create_comparative_plots(
         common_t,
         "comparative_angular_momentum_error.png",
         out_dir,
-        log_y=True,
+        log_y=log_scale,
     )
 
     _plot_overlay(
         "Specific Orbital Energy Error (epsilon) - pd853 vs symplectic",
-        "Energy Error [J/kg]",
+        "Energy Error [J/kg] (log scale)",
         {
             "pd853": pd853_df["energy_error_Jkg"].to_numpy(float),
             "symplectic": symplectic_df["energy_error_Jkg"].to_numpy(float),
@@ -427,7 +431,7 @@ def create_comparative_plots(
         common_t,
         "comparative_energy_error.png",
         out_dir,
-        log_y=True,
+        log_y=log_scale,
     )
 
     # --- Component overlay plots ----------------------------------------
@@ -442,6 +446,7 @@ def create_comparative_plots(
         common_t,
         "comparative_position_components.png",
         out_dir,
+        log_y=log_scale,
     )
 
     _plot_component_overlay(
@@ -455,6 +460,7 @@ def create_comparative_plots(
         common_t,
         "comparative_velocity_components.png",
         out_dir,
+        log_y=log_scale,
     )
 
     # --- Summary statistics ---------------------------------------------

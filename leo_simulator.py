@@ -273,7 +273,7 @@ def _run_simulation_core(output_dir: Path, log_file: Path, integrator: str) -> N
     print("\nComparison Plots:")
     stk_csv_path = Path(__file__).resolve().parent / "STK_input" / "Satellite1_Results.csv"
     print(f"  STK comparison source: {stk_csv_path}")
-    create_comparison_plots(output_dir, orbit, integrator=integrator, stk_csv=stk_csv_path)
+    create_comparison_plots(output_dir, orbit, integrator=integrator, stk_csv=stk_csv_path, show=False, log_scale=True)
 
     print("\nConservation Plots:")
     plot_conservation(t_export, y_export, orbit, output_dir)

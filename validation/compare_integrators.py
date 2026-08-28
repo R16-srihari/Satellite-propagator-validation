@@ -138,6 +138,7 @@ def run_comparison(
         output_dir=comp_dir,
         orbit_params=orbit_params,
         show=show,
+        log_scale=True,
     )
 
     # Phase 3 - list the generated outputs.
