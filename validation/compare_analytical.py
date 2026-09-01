@@ -440,12 +440,20 @@ def create_comparison_plots(output_dir, orbit_params, integrator="pd853", stk_cs
         """
         if plt is None:
             return
+        # Pop first element
+        y_values = y_values[1:]
+        if x_values is not None:
+            x_values = x_values[1:]
+        if stky is not None:
+            stky = stky[1:]
+        # t_values is defined in outer scope; we need to use it and also pop first element
+        t_values_popped = t_values[1:]
         fig, ax = plt.subplots(figsize=(10, 5))
         # Plot STK data first (if available) to ensure it is underneath
         if x_values is not None and stky is not None:
-            ax.plot(x_values, stky, label=stklab, linestyle="--",color='orange', linewidth=1.5)
+            ax.plot(x_values, stky, label=stklab, linestyle="--", color='orange', linewidth=1.5)
         # Then plot the integrator data on top
-        ax.plot(t_values, y_values, label=f"{integrator}", color='blue', linewidth=2.0)
+        ax.plot(t_values_popped, y_values, label=f"{integrator}", color='blue', linewidth=2.0)
         ax.axhline(0.0, color="black", linestyle="--", linewidth=1.0, alpha=0.7)
         ax.set_title(title)
         ax.set_xlabel("Time [s]")

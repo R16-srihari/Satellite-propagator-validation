@@ -127,6 +127,9 @@ def _plot_overlay(
     """
     if plt is None:
         return
+    # Pop first element
+    t_values = t_values[1:]
+    series = {k: v[1:] for k, v in series.items()}
     fig, ax = plt.subplots(figsize=(10, 5))
     for name, y_values in series.items():
         style = _INTEGRATOR_STYLES.get(name, {})
@@ -164,6 +167,9 @@ def _plot_component_overlay(
     """
     if plt is None:
         return
+    # Pop first element
+    t_values = t_values[1:]
+    components = [(label, pd_vals[1:], sym_vals[1:]) for label, pd_vals, sym_vals in components]
     fig, axes = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
     for ax, (label, pd_vals, sym_vals) in zip(axes, components):
         ax.plot(
