@@ -1,8 +1,7 @@
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 import numpy as np
-
 
 SAFETY = 0.9
 MIN_FACTOR = 0.2

@@ -6,17 +6,17 @@ from contextlib import redirect_stdout
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 from src.constants import constants
-from src.gravity_ode import gravity_ode
 from src.eci_from_keplerian import eci_from_keplerian
+from src.export_results import export_results
+from src.gravity_ode import gravity_ode
 from src.orbital_parameters import orbital_parameters, read_opm_cartesian_state
 from src.rk78_integrate import rk78_integrate
 from src.symplectic_integrate import symplectic_integrate
-from src.export_results import export_results
 from validation.compare_analytical import compare_analytical
 from validation.plot_conservation import plot_conservation
-import pandas as pd
 
 
 class Tee:

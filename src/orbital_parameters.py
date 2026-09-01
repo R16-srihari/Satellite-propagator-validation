@@ -1,7 +1,7 @@
-from dataclasses import dataclass
 import math
-from pathlib import Path
+from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 import numpy as np
