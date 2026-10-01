@@ -50,13 +50,25 @@ def load_time_series(csv_path: Path) -> tuple[list[str], np.ndarray, np.ndarray]
     with csv_path.open(newline="", encoding="utf-8") as handle:
         reader = csv.DictReader(handle)
         fieldnames = reader.fieldnames or []
-        # Accept either STK's meter-based or older km-based column names.
-        g_key = "Delaunay_G (m^2/sec)" if "Delaunay_G (m^2/sec)" in fieldnames else "Delaunay_G (km^2/sec)"
-        a_key = "Semimajor_Axis (m)" if "Semimajor_Axis (m)" in fieldnames else "Semi-major Axis (km)"
+        # Accept either STK's meter-based or km-based column names.
+        if "Delaunay_G (m^2/sec)" in fieldnames:
+            g_key = "Delaunay_G (m^2/sec)"
+        elif "Delaunay_G (km^2/sec)" in fieldnames:
+            g_key = "Delaunay_G (km^2/sec)"
+        else:
+            g_key = "Delaunay_G"
+
+        if "Semimajor_Axis (m)" in fieldnames:
+            a_key = "Semimajor_Axis (m)"
+        elif "Semimajor_Axis (km)" in fieldnames:
+            a_key = "Semimajor_Axis (km)"
+        else:
+            a_key = "Semi-major Axis (km)"
+
         # We want to work in SI (meters). If the file provides km-based values,
         # scale them into meters here.
-        g_scale = 1.0 if g_key.endswith("(m^2/sec)") else 1_000_000.0
-        a_scale = 1.0 if a_key.endswith("(m)") else 1000.0
+        g_scale = 1_000_000.0 if g_key.endswith("(km^2/sec)") else 1.0
+        a_scale = 1000.0 if a_key.endswith("(km)") else 1.0
 
         for row in reader:
             time_value = row.get("Time (UTCG)", "")
