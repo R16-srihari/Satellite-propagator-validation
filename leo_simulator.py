@@ -216,20 +216,11 @@ def _run_simulation_core(output_dir: Path, log_file: Path, integrator: str) -> N
     print("=== INTEGRATION SETUP ===")
 
     t_final = const.seconds_per_day
-    output_interval = input("Enter output grid step in seconds [default value is 10]: ").strip()
-    if output_interval:
-        time_step_s = float(output_interval)
-        if time_step_s <= 0:
-            raise ValueError("Output grid step must be positive")
-    else:
-        time_step_s = 10.0
-
-    t_output = np.arange(0.0, t_final + time_step_s * 0.5, time_step_s)
+    # Endpoints-only t_eval: only first and last elements used by integrators
+    t_output = np.array([0.0, t_final])
 
     print(f"Simulation duration:    24 hours ({t_final:.0f} seconds)")
-    print(f"Output interval:        {int(time_step_s)} seconds")
-    print(f"Expected orbits:        {t_final / orbit.period:.2f}")
-    print(f"Output points:          {t_output.size}")
+    print(f"Integration span: 0 - {t_final:.0f} s (endpoints-only; exporting all accepted internal steps)")
 
     options = _build_integrator_options(integrator)
 
@@ -247,11 +238,11 @@ def _run_simulation_core(output_dir: Path, log_file: Path, integrator: str) -> N
     print(f"Solver steps:           {stats.accepted_steps}")
     print(f"Rejected steps:         {stats.rejected_steps}")
     print(f"Function evaluations:   {stats.function_evaluations}")
-    print(f"Output points:          {t_adapt.size}")
+    print(f"Raw samples:          {t_adapt.size}")
     print("===========================\n")
 
     print("=== SAVING RESULTS ===")
-    export_results(t_adapt, y_adapt, orbit, output_dir,time_step_s)
+    export_results(t_adapt, y_adapt, orbit, output_dir)
     cartesian_file = output_dir / "orbit_cartesian.csv"
     df_cart = pd.read_csv(cartesian_file)
     t_export = df_cart["time_s"].to_numpy()

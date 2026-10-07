@@ -60,16 +60,15 @@ def plot_conservation(t_vector, y_matrix, orbit_params, output_dir):
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
     # Only plot the error relative to analytical values (single-panel plots).
-    time_index = np.arange(len(time_hours))
-    tick_step = max(1, len(time_index) // 8)
-    tick_positions = time_index[::tick_step]
-    tick_labels = [f"{time_hours[int(i)]:.2f}h" for i in tick_positions]
+    # Use time in hours for x-axis
+    tick_positions = np.linspace(time_hours.min(), time_hours.max(), 9)
+    tick_labels = [f"{pos:.2f}h" for pos in tick_positions]
 
     # Energy error plot
     fig, ax = plt.subplots(figsize=(14, 6))
-    ax.plot(time_index, energy_error, linewidth=1.2, color="darkblue", label="Energy Error")
+    ax.plot(time_hours, energy_error, linewidth=1.2, color="darkblue", label="Energy Error")
     ax.axhline(0.0, color="green", linestyle="--", linewidth=1.5)
-    ax.set_xlabel("Sample index")
+    ax.set_xlabel("Time [hours]")
     ax.set_ylabel("Specific Energy Error (J/kg)")
     ax.set_title("Specific Orbital Energy Error")
     ax.grid(True, alpha=0.35)
@@ -81,10 +80,10 @@ def plot_conservation(t_vector, y_matrix, orbit_params, output_dir):
     plt.close()
 
     # Angular momentum error plot
-    _fig, ax = plt.subplots(figsize=(14, 6))
-    ax.plot(time_index, h_error, linewidth=1.2, color="darkblue", label="Angular Momentum Error")
+    fig, ax = plt.subplots(figsize=(14, 6))
+    ax.plot(time_hours, h_error, linewidth=1.2, color="darkblue", label="Angular Momentum Error")
     ax.axhline(0.0, color="green", linestyle="--", linewidth=1.5)
-    ax.set_xlabel("Sample index")
+    ax.set_xlabel("Time [hours]")
     ax.set_ylabel("Specific Angular Momentum Error (m^2/s)")
     ax.set_title("Specific Angular Momentum Error")
     ax.grid(True, alpha=0.35)

@@ -378,6 +378,14 @@ def create_comparative_plots(
     if t_pd.size != t_sym.size or not np.allclose(t_pd, t_sym, rtol=0, atol=1e-6):
         print("  Warning: time grids differ between integrators; interpolating ...")
         common_t = np.union1d(t_pd, t_sym)
+        # Guard against excessively large union grid
+        if common_t.size > 200_000:
+            print(f"  Warning: union grid size ({common_t.size}) exceeds 200,000; falling back to denser grid.")
+            # Fall back to the denser of the two grids
+            if t_pd.size >= t_sym.size:
+                common_t = t_pd
+            else:
+                common_t = t_sym
         pd853_df = _interpolate_df(pd853_df, common_t)
         symplectic_df = _interpolate_df(symplectic_df, common_t)
     else:

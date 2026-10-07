@@ -256,6 +256,9 @@ def compare_analytical(t_vector, y_matrix, orbit_params, output_dir):
     df_h = _load_state_csv(angmom_file, ("time_s", "h_mag", "dH_abs", "dH_rel"))
 
     t_vector = np.asarray(df_cart["time_s"], dtype=float).reshape(-1)
+    # Defensive check: ensure time vector is strictly increasing
+    if not np.all(np.diff(t_vector) > 0):
+        raise ValueError("Exported time column must be strictly increasing")
     x_num = np.asarray(df_cart["x_m"], dtype=float)
     y_num = np.asarray(df_cart["y_m"], dtype=float)
     z_num = np.asarray(df_cart["z_m"], dtype=float)

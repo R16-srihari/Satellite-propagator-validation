@@ -54,10 +54,12 @@ def symplectic_integrate(
     options: dict | None = None,
 ) -> tuple[np.ndarray, np.ndarray, SymplecticStats]:
     """
-    Integrate to requested output times using the s=4 (order-8) Gauss–Legendre
-    implicit Runge–Kutta method (symplectic RK for Kepler-like systems).
+    Integrate over the time span defined by t_eval (only first and last elements used)
+    using the s=4 (order-8) Gauss–Legendre implicit Runge–Kutta method
+    (symplectic RK for Kepler-like systems). Returns all accepted internal steps.
 
-    Notes:
+    Notes
+    -----
     - The provided `fun` parameter is used directly for the right-hand side
       evaluations. For two-body dynamics, pass `src.gravity_ode.gravity_ode`.
     - Fixed internal step size comes from options:
@@ -98,8 +100,11 @@ def symplectic_integrate(
     A, b, c = _gauss_legendre_tableau(s)
 
     t_current = float(t_eval[0])
-    y_out = np.empty((t_eval.size, y_current.size), dtype=float)
-    y_out[0] = y_current
+    t_final = float(t_eval[-1])
+
+    # Raw history: store every accepted step
+    t_raw = [t_current]
+    y_raw = [y_current.copy()]
 
     accepted_steps = 0
     function_evaluations = 0
@@ -112,74 +117,77 @@ def symplectic_integrate(
         function_evaluations += 1
         return fun(t, y)
 
-    output_index = 1
-    while output_index < t_eval.size:
-        next_output_time = float(t_eval[output_index])
+    while direction * (t_final - t_current) > 0.0:
+        remaining = t_final - t_current
+        h = direction * min(step_size, abs(remaining))
+        if h == 0.0:
+            break
 
-        while direction * (next_output_time - t_current) > 0.0:
-            remaining = next_output_time - t_current
-            h = direction * min(step_size, abs(remaining))
-            if h == 0.0:
-                break
+        y_n = y_current.copy()
+        t_n = t_current
 
-            y_n = y_current.copy()
-            t_n = t_current
+        # Initialize K for nonlinear solve
+        if K_prev is None:
+            f0 = rhs_counted(t_n, y_n)
+            K_prev = np.tile(f0, (s, 1))
 
-            # Initialize K for nonlinear solve
-            if K_prev is None:
-                f0 = rhs_counted(t_n, y_n)
-                K_prev = np.tile(f0, (s, 1))
+        def residual(K_flat: np.ndarray) -> np.ndarray:
+            K = K_flat.reshape(s, 2 * d)
+            R = np.empty_like(K)
+            for i in range(s):
+                stage_state = y_n + h * np.sum(A[i, :, None] * K, axis=0)  # noqa: B023
+                t_i = t_n + c[i] * h  # noqa: B023
+                R[i] = K[i] - rhs_counted(t_i, stage_state)
+            return R.ravel()
 
-            def residual(K_flat: np.ndarray) -> np.ndarray:
-                K = K_flat.reshape(s, 2 * d)
-                R = np.empty_like(K)
-                for i in range(s):
-                    stage_state = y_n + h * np.sum(A[i, :, None] * K, axis=0)  # noqa: B023
-                    t_i = t_n + c[i] * h  # noqa: B023
-                    R[i] = K[i] - rhs_counted(t_i, stage_state)
-                return R.ravel()
+        solver_tol = float(options.get("GaussLegendreTol", 1e-10))
+        maxfev = options.get("GaussLegendreMaxFEV", None)
+        xtol = options.get("GaussLegendreXtol", None)
 
-            solver_tol = float(options.get("GaussLegendreTol", 1e-10))
-            maxfev = options.get("GaussLegendreMaxFEV", None)
-            xtol = options.get("GaussLegendreXtol", None)
+        root_kwargs: dict = {}
+        root_options: dict = {}
+        if maxfev is not None:
+            root_options["maxfev"] = int(maxfev)
+        if xtol is not None:
+            # SciPy's root(hybr) supports xtol
+            root_options["xtol"] = float(xtol)
 
-            root_kwargs: dict = {}
-            root_options: dict = {}
-            if maxfev is not None:
-                root_options["maxfev"] = int(maxfev)
-            if xtol is not None:
-                # SciPy's root(hybr) supports xtol
-                root_options["xtol"] = float(xtol)
+        if root_options:
+            root_kwargs["options"] = root_options
 
-            if root_options:
-                root_kwargs["options"] = root_options
+        sol = root(residual, K_prev.ravel(), method="hybr", tol=solver_tol, **root_kwargs)
+        if not sol.success:
+            # Fallback initial guess
+            f_guess = rhs_counted(t_n, y_n)
+            K_guess = np.tile(f_guess, (s, 1))
+            sol = root(residual, K_guess.ravel(), method="hybr", tol=solver_tol, **root_kwargs)
 
-            sol = root(residual, K_prev.ravel(), method="hybr", tol=solver_tol, **root_kwargs)
-            if not sol.success:
-                # Fallback initial guess
-                f_guess = rhs_counted(t_n, y_n)
-                K_guess = np.tile(f_guess, (s, 1))
-                sol = root(residual, K_guess.ravel(), method="hybr", tol=solver_tol, **root_kwargs)
+        if not sol.success:
+            raise RuntimeError(
+                f"Gauss–Legendre nonlinear solve failed at t={t_n}: {sol.message}"
+            )
 
-            if not sol.success:
-                raise RuntimeError(
-                    f"Gauss–Legendre nonlinear solve failed at t={t_n}: {sol.message}"
-                )
+        K = sol.x.reshape(s, 2 * d)
+        y_np1 = y_n + h * np.sum(b[:, None] * K, axis=0)
 
-            K = sol.x.reshape(s, 2 * d)
-            y_np1 = y_n + h * np.sum(b[:, None] * K, axis=0)
+        y_current = y_np1
+        t_current += h
 
-            y_current = y_np1
-            t_current += h
+        accepted_steps += 1
+        if np.isnan(first_accepted_step):
+            first_accepted_step = abs(h)
 
-            accepted_steps += 1
-            if np.isnan(first_accepted_step):
-                first_accepted_step = abs(h)
+        K_prev = K
 
-            K_prev = K
+        # Record accepted step (guard against duplicate time due to zero step)
+        if t_current > t_raw[-1]:
+            t_raw.append(t_current)
+            y_raw.append(y_current.copy())
 
-        y_out[output_index] = y_current
-        output_index += 1
+    # Ensure final time is recorded (if not already due to exact step)
+    if t_raw[-1] != t_final:
+        t_raw.append(t_final)
+        y_raw.append(y_current.copy())
 
     stats = SymplecticStats(
         accepted_steps=accepted_steps,
@@ -190,4 +198,4 @@ def symplectic_integrate(
         first_attempt_error_norm=float("nan"),
         first_accepted_step=first_accepted_step,
     )
-    return t_eval, y_out, stats
+    return np.asarray(t_raw), np.asarray(y_raw), stats

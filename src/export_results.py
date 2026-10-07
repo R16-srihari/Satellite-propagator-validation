@@ -2,17 +2,15 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from scipy.interpolate import PchipInterpolator
 
 from src.constants import constants
 from src.keplerian_from_eci import keplerian_from_eci
 
 
-def export_results(t_vector, y_matrix, orbit_params, output_dir,time_step_s):
+def export_results(t_vector, y_matrix, orbit_params, output_dir):
     """Export propagated states, orbital elements, and conservation metrics to CSV."""
     const = constants()
 
-    
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
@@ -21,20 +19,25 @@ def export_results(t_vector, y_matrix, orbit_params, output_dir,time_step_s):
     if t_vector.size != y_matrix.shape[0]:
         raise ValueError("t_vector and y_matrix must contain the same number of samples")
 
-    t_fixed = np.arange(t_vector[0], t_vector[-1] + time_step_s * 0.5, time_step_s)
-    state_interpolator = PchipInterpolator(t_vector, y_matrix, axis=0)
-    y_fixed = state_interpolator(t_fixed)
-    num_points = t_fixed.size
+    # Validate that time vector is strictly increasing (required for np.interp downstream)
+    if t_vector.size < 2:
+        raise ValueError("t_vector must contain at least two time points")
+    if not np.all(np.diff(t_vector) > 0):
+        raise ValueError("t_vector must be strictly increasing")
+    if np.any(np.isnan(t_vector)):
+        raise ValueError("t_vector contains NaN values")
+
+    num_points = t_vector.size
 
     cartesian_df = pd.DataFrame(
         {
-            "time_s": t_fixed,
-            "x_m": y_fixed[:, 0],
-            "y_m": y_fixed[:, 1],
-            "z_m": y_fixed[:, 2],
-            "vx_ms": y_fixed[:, 3],
-            "vy_ms": y_fixed[:, 4],
-            "vz_ms": y_fixed[:, 5],
+            "time_s": t_vector,
+            "x_m": y_matrix[:, 0],
+            "y_m": y_matrix[:, 1],
+            "z_m": y_matrix[:, 2],
+            "vx_ms": y_matrix[:, 3],
+            "vy_ms": y_matrix[:, 4],
+            "vz_ms": y_matrix[:, 5],
         }
     )
     cartesian_file = output_path / "orbit_cartesian.csv"
@@ -52,8 +55,8 @@ def export_results(t_vector, y_matrix, orbit_params, output_dir,time_step_s):
     report_stride = max(1, num_points // 10)
 
     for k in range(num_points):
-        r_vec = y_fixed[k, 0:3]
-        v_vec = y_fixed[k, 3:6]
+        r_vec = y_matrix[k, 0:3]
+        v_vec = y_matrix[k, 3:6]
 
         a_k, e_k, i_k, omega_big_k, omega_small_k, nu_k = keplerian_from_eci(r_vec, v_vec)
 
@@ -69,7 +72,7 @@ def export_results(t_vector, y_matrix, orbit_params, output_dir,time_step_s):
 
     keplerian_df = pd.DataFrame(
         {
-            "time_s": t_fixed,
+            "time_s": t_vector,
             "a_m": a_array,
             "e_": e_array,
             "i_deg": i_array * const.rad2deg,
@@ -87,8 +90,8 @@ def export_results(t_vector, y_matrix, orbit_params, output_dir,time_step_s):
     h_vec = np.zeros((num_points, 3))
 
     for k in range(num_points):
-        r_vec = y_fixed[k, 0:3]
-        v_vec = y_fixed[k, 3:6]
+        r_vec = y_matrix[k, 0:3]
+        v_vec = y_matrix[k, 3:6]
         r = np.linalg.norm(r_vec)
         v = np.linalg.norm(v_vec)
 
@@ -102,7 +105,7 @@ def export_results(t_vector, y_matrix, orbit_params, output_dir,time_step_s):
 
     energy_df = pd.DataFrame(
         {
-            "time_s": t_fixed,
+            "time_s": t_vector,
             "energy_Jkg": energy_array,
             "dE_abs": d_e_abs,
             "dE_rel": d_e_rel,
@@ -119,7 +122,7 @@ def export_results(t_vector, y_matrix, orbit_params, output_dir,time_step_s):
 
     angmom_df = pd.DataFrame(
         {
-            "time_s": t_fixed,
+            "time_s": t_vector,
             "hx": h_vec[:, 0],
             "hy": h_vec[:, 1],
             "hz": h_vec[:, 2],
@@ -136,9 +139,14 @@ def export_results(t_vector, y_matrix, orbit_params, output_dir,time_step_s):
     print(f"Total points exported: {num_points}")
     print(
         "Time span: "
-        f"{t_fixed[-1] / const.seconds_per_hour:.2f} hours "
-        f"({t_fixed[-1] / orbit_params.period:.2f} orbits)"
+        f"{t_vector[-1] / const.seconds_per_hour:.2f} hours "
+        f"({t_vector[-1] / orbit_params.period:.2f} orbits)"
     )
+    dt = np.diff(t_vector)
+    print(
+        f"Time step stats (s): min={np.min(dt):.3f}, median={np.median(dt):.3f}, max={np.max(dt):.3f}"
+    )
+    print(f"Non-uniform time grid: {np.max(dt) - np.min(dt) > 1e-9}")
     print(
         "Energy variation (%): "
         f"min={np.min(d_e_rel) * 100:.2e}, "

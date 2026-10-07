@@ -79,7 +79,35 @@ def pd853_integrate(
     y0: np.ndarray,
     options: dict | None = None,
 ) -> tuple[np.ndarray, np.ndarray, PD853Stats]:
-    """Integrate to requested output times using a standalone adaptive DOP853 stepper."""
+    """
+    Integrate over the time span defined by t_eval (only first and last elements used)
+    and return all accepted internal steps.
+
+    Parameters
+    ----------
+    fun : callable
+        Right-hand side of the system. Signature: fun(t, y) -> dy/dt.
+    t_eval : array-like
+        Strictly increasing time points; only the first and last elements are used to
+        define the integration interval. All accepted internal steps are returned.
+    y0 : array-like
+        Initial state vector.
+    options : dict, optional
+        Integrator options:
+        - RelTol: relative tolerance (default 1e-12)
+        - AbsTol: absolute tolerance (default 1e-14)
+        - MaxStep: maximum step size (default 60.0)
+        - InternalStep: initial step size suggestion (default 1e-3)
+
+    Returns
+    -------
+    t_raw : ndarray
+        Time points of all accepted steps (including initial), strictly increasing.
+    y_raw : ndarray
+        State vectors corresponding to t_raw.
+    stats : PD853Stats
+        Integrator statistics.
+    """
     if options is None:
         options = {}
 
@@ -109,8 +137,9 @@ def pd853_integrate(
     t_current = float(t_eval[0])
     t_final = float(t_eval[-1])
 
-    y_out = np.empty((t_eval.size, y_current.size), dtype=float)
-    y_out[0] = y_current
+    # Raw history: store every accepted step
+    t_raw = [t_current]
+    y_raw = [y_current.copy()]
 
     f_current = _as_1d_float_array(fun(t_current, y_current))
     if f_current.size != y_current.size:
@@ -135,18 +164,11 @@ def pd853_integrate(
         None if requested_step is None else float(requested_step),
     )
 
-    output_index = 1
-    while output_index < t_eval.size:
+    while direction * (t_final - t_current) > 0:
         remaining = t_final - t_current
-        if direction * remaining <= 0.0:
-            break
-
-        next_output_time = float(t_eval[output_index])
-        h_abs = min(h_abs, max_step, abs(remaining), abs(next_output_time - t_current))
+        h_abs = min(h_abs, max_step, abs(remaining))
         if h_abs == 0.0:
-            y_out[output_index] = y_current
-            output_index += 1
-            continue
+            break
 
         h = direction * h_abs
         t_new = t_current + h
@@ -187,16 +209,10 @@ def pd853_integrate(
             y_current = y_new
             f_current = f_new
 
-            while output_index < t_eval.size:
-                target_time = float(t_eval[output_index])
-                output_ready = (direction > 0.0 and target_time <= t_current) or (
-                    direction < 0.0 and target_time >= t_current
-                )
-                if output_ready:
-                    y_out[output_index] = y_current
-                    output_index += 1
-                    continue
-                break
+            # Record accepted step (guard against duplicate time due to zero step)
+            if t_current > t_raw[-1]:
+                t_raw.append(t_current)
+                y_raw.append(y_current.copy())
 
             if error_norm == 0.0:
                 factor = MAX_FACTOR
@@ -212,8 +228,10 @@ def pd853_integrate(
             factor = SAFETY * error_norm ** (-1.0 / 8.0)
             h_abs = min(max_step, abs(h) * max(MIN_FACTOR, factor))
 
-    if output_index < t_eval.size:
-        raise RuntimeError("PD853 integration failed to reach the final output time.")
+    # Ensure final time is recorded (if not already due to exact step)
+    if t_raw[-1] != t_final:
+        t_raw.append(t_final)
+        y_raw.append(y_current.copy())
 
     stats = PD853Stats(
         accepted_steps=accepted_steps,
@@ -225,4 +243,4 @@ def pd853_integrate(
         first_accepted_step=first_accepted_step,
     )
 
-    return t_eval, y_out, stats
+    return np.asarray(t_raw), np.asarray(y_raw), stats

@@ -27,10 +27,8 @@ Epoch (UTC):         2026-05-18 06:30:00
 ==========================
 
 === INTEGRATION SETUP ===
-Enter output grid step in seconds [default value is 10]: Simulation duration:    24 hours (86400 seconds)
-Output interval:        10 seconds
-Expected orbits:        15.39
-Output points:          8641
+Simulation duration:    24 hours (86400 seconds)
+Integration span: 0 - 86400 s (endpoints-only; exporting all accepted internal steps)
 SymplecticStep:        1.0e+00 s
 GaussLegendreTol:     1e-14
 GaussLegendreMaxFEV:  200
@@ -46,7 +44,7 @@ Integration in progress...
 Solver steps:           86400
 Rejected steps:         0
 Function evaluations:   10375277
-Output points:          8641
+Raw samples:          86401
 ===========================
 
 === SAVING RESULTS ===
@@ -69,11 +67,13 @@ Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technolog
 Saved: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\orbit_angular_momentum.csv
 
 === EXPORT SUMMARY ===
-Total points exported: 8641
+Total points exported: 86401
 Time span: 24.00 hours (15.39 orbits)
-Energy variation (%): min=-1.39e-12, max=1.68e-12, mean=7.32e-13
-Angular momentum variation (%): 1.52e-12
-Semi-major axis variation (m): 2.10e-07
+Time step stats (s): min=1.000, median=1.000, max=1.000
+Non-uniform time grid: False
+Energy variation (%): min=-1.44e-12, max=1.68e-12, mean=7.33e-13
+Angular momentum variation (%): 1.55e-12
+Semi-major axis variation (m): 2.13e-07
 ======================
 
 
@@ -88,34 +88,34 @@ Analytical Comparison Test:
   Position vector comparison:
   Analytical position vector norm:  6.828137000000000e+06 m
   Mean numerical position vector norm: 6.828137000000025e+06 m
-  Mean error norm:                1.644643e-06 m
-  Maximum error norm:             4.517047e-06 m
-  Mean rel error:                 2.408626e-13
-  Maximum rel error:              6.615344e-13
+  Mean error norm:                1.644636e-06 m
+  Maximum error norm:             4.524076e-06 m
+  Mean rel error:                 2.408616e-13
+  Maximum rel error:              6.625637e-13
 
   Velocity vector comparison:
   Analytical velocity vector norm:  7.640429532402150e+03 m/s
   Mean numerical velocity vector norm: 7.640429532402136e+03 m/s
-  Mean error norm:                1.835414e-09 m/s
-  Maximum error norm:             4.801078e-09 m/s
-  Mean rel error:                 2.402240e-13
-  Maximum rel error:              6.283781e-13
+  Mean error norm:                1.835394e-09 m/s
+  Maximum error norm:             4.807928e-09 m/s
+  Mean rel error:                 2.402213e-13
+  Maximum rel error:              6.292745e-13
 
   Energy comparison:
   Energy analytical value:        -2.918808171980146e+07 J/kg
-  Energy mean numerical value:    -2.918808171980134e+07 J/kg
-  Energy mean abs error:          2.137698e-07 J/kg
+  Energy mean numerical value:    -2.918808171980135e+07 J/kg
+  Energy mean abs error:          2.138183e-07 J/kg
   Energy max abs error:           4.917383e-07 J/kg
-  Energy mean rel error:          7.323874e-15
+  Energy mean rel error:          7.325535e-15
   Energy max rel error:           1.684723e-14
 
   Angular momentum magnitude comparison:
   Angular momentum magnitude analytical value:        5.216989958608781e+10 m^2/s
-  Angular momentum magnitude mean numerical value:    5.216989958608792e+10 m^2/s
-  Angular momentum magnitude mean abs error:          1.907199e-04 m^2/s
-  Angular momentum magnitude max abs error:           4.272461e-04 m^2/s
-  Angular momentum magnitude mean rel error:          3.655745e-15
-  Angular momentum magnitude max rel error:           8.189513e-15
+  Angular momentum magnitude mean numerical value:    5.216989958608793e+10 m^2/s
+  Angular momentum magnitude mean abs error:          1.907512e-04 m^2/s
+  Angular momentum magnitude max abs error:           4.348755e-04 m^2/s
+  Angular momentum magnitude mean rel error:          3.656346e-15
+  Angular momentum magnitude max rel error:           8.335755e-15
 
   Data saved to: C:\Users\sriha\OneDrive - Indian Institute of Space Science and Technology\Satellite-propagator-validation\output\symplectic\analytical_comparison.csv
 
