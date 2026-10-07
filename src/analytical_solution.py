@@ -13,7 +13,47 @@ def analytical_solution(
     nu0: float,
     mu: float,
 ):
-    """Compute analytical Keplerian state at a given time."""
+    """Compute analytical Keplerian state at a given time.
+
+    Parameters
+    ----------
+    t_eval : float
+        Time at which to evaluate the solution [seconds].
+    a : float
+        Semi-major axis [meters]. Must be positive.
+    e : float
+        Eccentricity. Must satisfy 0 <= e < 1 (elliptical orbits only).
+    i : float
+        Inclination [radians]. Must satisfy 0 <= i <= pi.
+    omega_big : float
+        Right ascension of ascending node (RAAN) [radians].
+    omega_small : float
+        Argument of perigee [radians].
+    nu0 : float
+        Initial true anomaly at epoch [radians].
+    mu : float
+        Gravitational parameter [m^3/s^2].
+
+    Returns
+    -------
+    tuple[np.ndarray, np.ndarray]
+        Position and velocity vectors in ECI frame [m, m/s].
+
+    Raises
+    ------
+    ValueError
+        If a <= 0, e < 0, e >= 1, or i outside [0, pi].
+    """
+    # Input validation
+    if a <= 0:
+        raise ValueError(f"Semi-major axis must be positive, got a={a}")
+    if e < 0:
+        raise ValueError(f"Eccentricity must be non-negative, got e={e}")
+    if e >= 1:
+        raise ValueError(f"Eccentricity must be < 1 for elliptical orbits, got e={e}")
+    if not (0 <= i <= math.pi):
+        raise ValueError(f"Inclination must be in [0, pi], got i={i}")
+
     n = math.sqrt(mu / a**3)
 
     if e < 1e-10:
