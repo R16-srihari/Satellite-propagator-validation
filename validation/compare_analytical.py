@@ -237,6 +237,94 @@ def _load_stk_reference(stk_csv: Path | None, orbit_params) -> dict | None:
     return result
 
 
+def _load_stk_errors_csv(stk_errors_csv: Path) -> dict | None:
+    """Load pre-computed STK errors from STK_errors.csv.
+
+    Expected columns:
+    - time_s
+    - x_error_m, y_error_m, z_error_m, r_error_norm_m
+    - vx_error_ms, vy_error_ms, vz_error_ms, v_error_norm_ms
+    - h_error_m2s, energy_error_Jkg
+    """
+    if not stk_errors_csv.exists():
+        return None
+
+    try:
+        df = pd.read_csv(stk_errors_csv)
+    except Exception:
+        return None
+
+    # Strip whitespace from column names (STK CSV may have trailing spaces)
+    df.columns = df.columns.str.strip()
+
+    required_cols = ["time_s", "r_error_norm_m", "h_error_m2s", "energy_error_Jkg"]
+    if any(c not in df.columns for c in required_cols):
+        return None
+
+    stk_time = df["time_s"].to_numpy(float)
+
+    result = {
+        "time_s": stk_time,
+        "r_error_norm_m": df["r_error_norm_m"].to_numpy(float),
+        "h_error_m2s": df["h_error_m2s"].to_numpy(float),
+        "energy_error_Jkg": df["energy_error_Jkg"].to_numpy(float),
+    }
+
+    # Position component errors (optional)
+    if all(c in df.columns for c in ["x_error_m", "y_error_m", "z_error_m"]):
+        result["position_error"] = np.column_stack((
+            df["x_error_m"].to_numpy(float),
+            df["y_error_m"].to_numpy(float),
+            df["z_error_m"].to_numpy(float),
+        ))
+
+    # Velocity component errors (optional)
+    if all(c in df.columns for c in ["vx_error_ms", "vy_error_ms", "vz_error_ms"]):
+        result["velocity_error"] = np.column_stack((
+            df["vx_error_ms"].to_numpy(float),
+            df["vy_error_ms"].to_numpy(float),
+            df["vz_error_ms"].to_numpy(float),
+        ))
+        result["v_error_norm_ms"] = df["v_error_norm_ms"].to_numpy(float)
+
+    return result
+
+
+def _compute_analytical_on_stk_grid(stk_time: np.ndarray, orbit_params, mu: float) -> tuple:
+    """Compute analytical reference solution directly on STK time grid.
+
+    Returns:
+        r_ana_stk: position (N, 3)
+        v_ana_stk: velocity (N, 3)
+        h_ana_stk: angular momentum magnitude (N,)
+        energy_ana_stk: specific orbital energy (N,)
+    """
+    from src.analytical_solution import analytical_solution
+
+    n_stk = len(stk_time)
+    r_ana_stk = np.zeros((n_stk, 3), dtype=float)
+    v_ana_stk = np.zeros((n_stk, 3), dtype=float)
+
+    for idx, t_val in enumerate(stk_time):
+        r_ana_stk[idx], v_ana_stk[idx] = analytical_solution(
+            float(t_val),
+            orbit_params.a,
+            orbit_params.e,
+            orbit_params.i,
+            orbit_params.omega_big,
+            orbit_params.omega_small,
+            orbit_params.nu,
+            mu,
+        )
+
+    h_ana_stk = np.linalg.norm(np.cross(r_ana_stk, v_ana_stk), axis=1)
+    r_mag = np.linalg.norm(r_ana_stk, axis=1)
+    v_mag = np.linalg.norm(v_ana_stk, axis=1)
+    energy_ana_stk = 0.5 * v_mag**2 - mu / np.clip(r_mag, 1e-12, None)
+
+    return r_ana_stk, v_ana_stk, h_ana_stk, energy_ana_stk
+
+
 def compare_analytical(t_vector, y_matrix, orbit_params, output_dir):
     """Compare exported numerical trajectory against the analytical two-body reference.
 
@@ -416,24 +504,86 @@ def create_comparison_plots(output_dir, orbit_params, integrator="pd853", stk_cs
     comparison_file = validation_dir / "comparison_errors.csv"
     comparison_df.to_csv(comparison_file, index=False)
 
-    stk_data = _load_stk_reference(Path(stk_csv) if stk_csv is not None else None, orbit_params)
+    # Try to load pre-computed STK errors first
+    base_output_dir = output_path.parent if output_path.name != "output" else output_path
+    stk_errors_csv_path = base_output_dir / "STK_errors.csv"
+    stk_errors = _load_stk_errors_csv(stk_errors_csv_path)
 
-    # Precompute analytical values on the integrator time grid for interpolation
-    h_ana_mag_arr = h_ana_mag  # already computed above
-    energy_ana_arr = np.full_like(t_values, orbit_params.energy)
+    if stk_errors is not None:
+        # Use pre-computed STK errors
+        stk_time = stk_errors["time_s"]
+        stk_position_error = stk_errors.get("position_error", None)
+        stk_velocity_error = stk_errors.get("velocity_error", None)
+        stk_h_error = stk_errors.get("h_error_m2s", None)
+        stk_energy_error = stk_errors.get("energy_error_Jkg", None)
+        print(f"  Using pre-computed STK errors from {stk_errors_csv_path}")
+    else:
+        # Fall back to computing STK errors from Satellite1_Results.csv
+        stk_data = _load_stk_reference(Path(stk_csv) if stk_csv is not None else None, orbit_params)
 
-    # Interpolate analytical h and energy onto STK time grid
-    def _interp_analytical(stk_time):
-        """Interpolate analytical reference values onto STK time stamps."""
-        h_interp = np.interp(stk_time, t_values, h_ana_mag_arr)
-        energy_interp = np.interp(stk_time, t_values, energy_ana_arr)
-        r_ana_interp = np.column_stack(
-            [np.interp(stk_time, t_values, r_ana[:, i]) for i in range(3)]
-        )
-        v_ana_interp = np.column_stack(
-            [np.interp(stk_time, t_values, v_ana[:, i]) for i in range(3)]
-        )
-        return r_ana_interp, v_ana_interp, h_interp, energy_interp
+        if stk_data is not None:
+            stk_time = np.asarray(stk_data["time_s"], dtype=float)
+            # Compute analytical reference directly on STK time grid
+            r_ana_stk, v_ana_stk, h_ana_stk, energy_ana_stk = _compute_analytical_on_stk_grid(stk_time, orbit_params, mu)
+
+            # STK position error (STK position vs analytical on STK grid)
+            stk_position_error = stk_data["position_m"] - r_ana_stk
+
+            # STK velocity error (STK velocity vs analytical on STK grid)
+            if "velocity_mps" in stk_data:
+                stk_velocity = stk_data["velocity_mps"]
+                stk_velocity_error = stk_velocity - v_ana_stk
+            else:
+                stk_velocity_error = None
+
+            # STK angular momentum error
+            if "h_mag" in stk_data:
+                stk_h_error = np.abs(stk_data["h_mag"] - h_ana_stk)
+            else:
+                stk_h_error = None
+
+            # STK energy error
+            if "energy_Jkg" in stk_data:
+                stk_energy_error = np.abs(stk_data["energy_Jkg"] - energy_ana_stk)
+            else:
+                stk_energy_error = None
+
+            # Build and write STK comparison errors CSV
+            n_stk = len(stk_time)
+            if stk_velocity_error is not None:
+                stk_errors_df = pd.DataFrame(
+                    {
+                        "time_s": stk_time,
+                        "r_error_norm_m": np.linalg.norm(stk_position_error, axis=1),
+                        "v_error_norm_ms": np.linalg.norm(stk_velocity_error, axis=1),
+                        "vx_error_ms": stk_velocity_error[:, 0],
+                        "vy_error_ms": stk_velocity_error[:, 1],
+                        "vz_error_ms": stk_velocity_error[:, 2],
+                        "h_error_m2s": stk_h_error if stk_h_error is not None else np.full(n_stk, np.nan),
+                        "energy_error_Jkg": stk_energy_error if stk_energy_error is not None else np.full(n_stk, np.nan),
+                    }
+                )
+            else:
+                stk_errors_df = pd.DataFrame(
+                    {
+                        "time_s": stk_time,
+                        "r_error_norm_m": np.linalg.norm(stk_position_error, axis=1),
+                        "v_error_norm_ms": np.full(n_stk, np.nan),
+                        "vx_error_ms": np.full(n_stk, np.nan),
+                        "vy_error_ms": np.full(n_stk, np.nan),
+                        "vz_error_ms": np.full(n_stk, np.nan),
+                        "h_error_m2s": stk_h_error if stk_h_error is not None else np.full(n_stk, np.nan),
+                        "energy_error_Jkg": stk_energy_error if stk_energy_error is not None else np.full(n_stk, np.nan),
+                    }
+                )
+            stk_errors_df.to_csv(stk_errors_csv_path, index=False)
+            print(f"  STK comparison CSV saved to {stk_errors_csv_path}")
+        else:
+            stk_time = None
+            stk_position_error = None
+            stk_velocity_error = None
+            stk_h_error = None
+            stk_energy_error = None
 
     def _plot_series(title: str, y_label: str, y_values: np.ndarray, save_name: str, x_values=None, stky=None, stklab="STK", log_y: bool = False):
         """Plot a single data series.
@@ -467,121 +617,54 @@ def create_comparison_plots(output_dir, orbit_params, integrator="pd853", stk_cs
         ax.legend()
         _save_plot(fig, validation_dir / save_name)
 
-    if stk_data is not None:
-        stk_time = np.asarray(stk_data["time_s"], dtype=float)
-        # Interpolate analytical reference onto STK time grid
-        r_ana_stk, v_ana_stk, h_ana_stk, energy_ana_stk = _interp_analytical(stk_time)
-
-        # STK position error (STK position vs interpolated analytical)
-        stk_position_error = stk_data["position_m"] - r_ana_stk
-
-        # STK velocity error (STK velocity vs interpolated analytical)
-        if "velocity_mps" in stk_data:
-            stk_velocity = stk_data["velocity_mps"]
-            stk_velocity_error = stk_velocity - v_ana_stk
-        else:
-            stk_velocity_error = None
-
-        # STK angular momentum error
-        if "h_mag" in stk_data:
-            stk_h_error = np.abs(stk_data["h_mag"] - h_ana_stk)
-        else:
-            stk_h_error = None
-
-        # STK energy error
-        if "energy_Jkg" in stk_data:
-            stk_energy_error = np.abs(stk_data["energy_Jkg"] - energy_ana_stk)
-        else:
-            stk_energy_error = None
-
-        # Build and write STK comparison errors CSV
-        n_stk = len(stk_time)
-        if stk_velocity_error is not None:
-            stk_errors_df = pd.DataFrame(
-                {
-                    "time_s": stk_time,
-                    "r_error_norm_m": np.linalg.norm(stk_position_error, axis=1),
-                    "v_error_norm_ms": np.linalg.norm(stk_velocity_error, axis=1),
-                    "vx_error_ms": stk_velocity_error[:, 0],
-                    "vy_error_ms": stk_velocity_error[:, 1],
-                    "vz_error_ms": stk_velocity_error[:, 2],
-                    "h_error_m2s": stk_h_error if stk_h_error is not None else np.full(n_stk, np.nan),
-                    "energy_error_Jkg": stk_energy_error if stk_energy_error is not None else np.full(n_stk, np.nan),
-                }
-            )
-        else:
-            stk_errors_df = pd.DataFrame(
-                {
-                    "time_s": stk_time,
-                    "r_error_norm_m": np.linalg.norm(stk_position_error, axis=1),
-                    "v_error_norm_ms": np.full(n_stk, np.nan),
-                    "vx_error_ms": np.full(n_stk, np.nan),
-                    "vy_error_ms": np.full(n_stk, np.nan),
-                    "vz_error_ms": np.full(n_stk, np.nan),
-                    "h_error_m2s": stk_h_error if stk_h_error is not None else np.full(n_stk, np.nan),
-                    "energy_error_Jkg": stk_energy_error if stk_energy_error is not None else np.full(n_stk, np.nan),
-                }
-            )
-        # Write to base output directory as STK_errors.csv
-        base_output_dir = output_path.parent if output_path.name != "output" else output_path
-        stk_errors_csv = base_output_dir / "STK_errors.csv"
-        stk_errors_df.to_csv(stk_errors_csv, index=False)
-        print(f"  STK comparison CSV saved to {stk_errors_csv}")
-    else:
-        stk_time = None
-        stk_position_error = None
-        stk_velocity_error = None
-        stk_h_error = None
-        stk_energy_error = None
-
     _plot_series("Position Error in x", "Position Error x [m]", r_err[:, 0], "x_position_error.png",
-                 x_values=stk_time if stk_data is not None else None,
+                 x_values=stk_time if stk_time is not None else None,
                  stky=stk_position_error[:, 0] if stk_position_error is not None else None,
                  log_y=log_scale)
 
     _plot_series("Position Error in y", "Position Error y [m]", r_err[:, 1], "y_position_error.png",
-                 x_values=stk_time if stk_data is not None else None,
+                 x_values=stk_time if stk_time is not None else None,
                  stky=stk_position_error[:, 1] if stk_position_error is not None else None,
                  log_y=log_scale)
 
     _plot_series("Position Error in z", "Position Error z [m]", r_err[:, 2], "z_position_error.png",
-                 x_values=stk_time if stk_data is not None else None,
+                 x_values=stk_time if stk_time is not None else None,
                  stky=stk_position_error[:, 2] if stk_position_error is not None else None,
                  log_y=log_scale)
 
     _plot_series("Position Error Magnitude", "Position Error ||r|| [m]", np.linalg.norm(r_err, axis=1), "position_error.png",
-                 x_values=stk_time if stk_data is not None else None,
+                 x_values=stk_time if stk_time is not None else None,
                  stky=np.linalg.norm(stk_position_error, axis=1) if stk_position_error is not None else None,
                  log_y=log_scale)
 
     # Velocity error plots include STK overlay when available
     _plot_series("Velocity Error in vx", "Velocity Error vx [m/s] (log scale)", v_err[:, 0], "vx_error.png",
-                 x_values=stk_time if stk_data is not None else None,
+                 x_values=stk_time if stk_time is not None else None,
                  stky=stk_velocity_error[:, 0] if stk_velocity_error is not None else None,
                  log_y=log_scale)
 
     _plot_series("Velocity Error in vy", "Velocity Error vy [m/s] (log scale)", v_err[:, 1], "vy_error.png",
-                 x_values=stk_time if stk_data is not None else None,
+                 x_values=stk_time if stk_time is not None else None,
                  stky=stk_velocity_error[:, 1] if stk_velocity_error is not None else None,
                  log_y=log_scale)
 
     _plot_series("Velocity Error in vz", "Velocity Error vz [m/s] (log scale)", v_err[:, 2], "vz_error.png",
-                 x_values=stk_time if stk_data is not None else None,
+                 x_values=stk_time if stk_time is not None else None,
                  stky=stk_velocity_error[:, 2] if stk_velocity_error is not None else None,
                  log_y=log_scale)
 
     _plot_series("Velocity Error Magnitude", "Velocity Error ||v|| [m/s] (log scale)", np.linalg.norm(v_err, axis=1), "velocity_error.png",
-                 x_values=stk_time if stk_data is not None else None,
+                 x_values=stk_time if stk_time is not None else None,
                  stky=np.linalg.norm(stk_velocity_error, axis=1) if stk_velocity_error is not None else None,
                  log_y=log_scale)
 
     _plot_series("Specific Angular Momentum Error", "Angular Momentum Error |h| [m^2/s] (log scale)", h_err, "angular_momentum_error.png",
-                 x_values=stk_time if stk_data is not None else None,
+                 x_values=stk_time if stk_time is not None else None,
                  stky=stk_h_error if stk_h_error is not None else None,
                  log_y=log_scale)
 
     _plot_series("Specific Orbital Energy Error", "Energy Error [J/kg] (log scale)", energy_err, "energy_error.png",
-                 x_values=stk_time if stk_data is not None else None,
+                 x_values=stk_time if stk_time is not None else None,
                  stky=stk_energy_error if stk_energy_error is not None else None,
                  log_y=log_scale)
 
