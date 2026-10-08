@@ -233,6 +233,10 @@ def main():
         raise FileNotFoundError(f"OPM file not found: {args.opm}")
     opm_raw = parse_opm(args.opm)
     elements = opm_elements(opm_raw)
+    
+    # Compute analytical reference values for angular momentum and energy
+    h_ana = np.sqrt(constants().mu_earth * elements["a"] * (1.0 - elements["e"] ** 2))
+    e_ana = -constants().mu_earth / (2.0 * elements["a"])
 
     # Compute analytical reference on STK time grid
     t_values = stk_df["time_s"].to_numpy(float)
@@ -259,7 +263,6 @@ def main():
     # Angular momentum error
     if "h_mag" in stk_df.columns:
         # analytical h magnitude
-        h_ana = np.linalg.norm(np.cross(r_ana, v_ana), axis=1)
         h_error = np.abs(stk_df["h_mag"].to_numpy() - h_ana)
     else:
         h_error = np.full_like(t_values, np.nan)
@@ -267,9 +270,6 @@ def main():
     # Energy error
     if "energy_Jkg" in stk_df.columns:
         # analytical energy
-        v_mag = np.linalg.norm(v_ana, axis=1)
-        r_mag = np.linalg.norm(r_ana, axis=1)
-        e_ana = 0.5 * v_mag**2 - constants().mu_earth / np.clip(r_mag, 1e-12, None)
         energy_error = np.abs(stk_df["energy_Jkg"].to_numpy() - e_ana)
     else:
         energy_error = np.full_like(t_values, np.nan)
@@ -287,7 +287,7 @@ def main():
 
     # Save to CSV
     out_df = pd.DataFrame({
-        "time_s": t_values,
+        "time_s": np.int64(t_values),
         "x_error_m": r_err[:, 0],
         "y_error_m": r_err[:, 1],
         "z_error_m": r_err[:, 2],
