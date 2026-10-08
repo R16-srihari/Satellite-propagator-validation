@@ -119,7 +119,7 @@ def _load_orbit_from_opm(opm_path: Path | None) -> OrbitParameters:
         period_min=(const.twopi / np.sqrt(const.mu_earth / a**3)) / 60.0,
         v_orbit=np.sqrt(const.mu_earth / a),
         energy=-const.mu_earth / (2.0 * a),
-        h_mag=np.sqrt(const.mu_earth * a),
+        h_mag=np.sqrt(const.mu_earth * a * (1.0 - e**2)),
         num_orbits_24h=const.seconds_per_day / (const.twopi / np.sqrt(const.mu_earth / a**3)),
         epoch=epoch,
     )
@@ -479,9 +479,8 @@ def create_comparison_plots(output_dir, orbit_params, integrator="pd853", stk_cs
     v_err = v_num - v_ana
 
     h_num = np.cross(r_num, v_num)
-    h_ana = np.cross(r_ana, v_ana)
     h_num_mag = np.linalg.norm(h_num, axis=1)
-    h_ana_mag = np.linalg.norm(h_ana, axis=1)
+    h_ana_mag = orbit_params.h_mag
     h_err = np.abs(h_num_mag - h_ana_mag)
 
     r_mag = np.linalg.norm(r_num, axis=1)
